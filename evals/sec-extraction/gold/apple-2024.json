@@ -1,0 +1,42 @@
+{
+  "_comment": "Apple FY2024 10-K — first hand-validated gold filing. Phase 1 (rules-only) extractor scored 23/23 on status classification. Verified against the actual Apple 10-K text in EDGAR.",
+  "filing": {
+    "cik": "320193",
+    "accession": "0000320193-24-000123",
+    "form_type": "10-K",
+    "filing_date": "2024-11-01",
+    "period_ending": "2024-09-28",
+    "primary_document": "aapl-20240928.htm"
+  },
+  "cover_page_incorporates": {
+    "target_form": "DEF 14A",
+    "expected_year": 2025
+  },
+  "expected_items": [
+    {"part": 1, "item_number": "1",  "status": "extracted",                  "title_hint": "Business"},
+    {"part": 1, "item_number": "1A", "status": "extracted",                  "title_hint": "Risk Factors"},
+    {"part": 1, "item_number": "1B", "status": "not_applicable",             "title_hint": "Unresolved Staff Comments"},
+    {"part": 1, "item_number": "1C", "status": "extracted",                  "title_hint": "Cybersecurity"},
+    {"part": 1, "item_number": "2",  "status": "extracted",                  "title_hint": "Properties"},
+    {"part": 1, "item_number": "3",  "status": "extracted",                  "title_hint": "Legal Proceedings"},
+    {"part": 1, "item_number": "4",  "status": "not_applicable",             "title_hint": "Mine Safety Disclosures"},
+    {"part": 2, "item_number": "5",  "status": "extracted",                  "title_hint": "Market for Registrant's Common Equity"},
+    {"part": 2, "item_number": "6",  "status": "reserved",                   "title_hint": "[Reserved]"},
+    {"part": 2, "item_number": "7",  "status": "extracted",                  "title_hint": "MD&A"},
+    {"part": 2, "item_number": "7A", "status": "extracted",                  "title_hint": "Quantitative and Qualitative Disclosures About Market Risk"},
+    {"part": 2, "item_number": "8",  "status": "extracted",                  "title_hint": "Financial Statements and Supplementary Data"},
+    {"part": 2, "item_number": "9",  "status": "not_applicable",             "title_hint": "Changes in and Disagreements with Accountants"},
+    {"part": 2, "item_number": "9A", "status": "extracted",                  "title_hint": "Controls and Procedures"},
+    {"part": 2, "item_number": "9B", "status": "extracted",                  "title_hint": "Other Information"},
+    {"part": 2, "item_number": "9C", "status": "not_applicable",             "title_hint": "Disclosure Regarding Foreign Jurisdictions"},
+    {"part": 3, "item_number": "10", "status": "partial",                    "title_hint": "Directors, Executive Officers and Corporate Governance",
+     "_note": "inline insider-trading-policy paragraph + by-ref clause -> partial"},
+    {"part": 3, "item_number": "11", "status": "incorporated_by_reference",  "title_hint": "Executive Compensation"},
+    {"part": 3, "item_number": "12", "status": "incorporated_by_reference",  "title_hint": "Security Ownership"},
+    {"part": 3, "item_number": "13", "status": "incorporated_by_reference",  "title_hint": "Certain Relationships and Related Transactions"},
+    {"part": 3, "item_number": "14", "status": "incorporated_by_reference",  "title_hint": "Principal Accountant Fees and Services"},
+    {"part": 4, "item_number": "15", "status": "extracted",                  "title_hint": "Exhibits and Financial Statement Schedules"},
+    {"part": 4, "item_number": "16", "status": "extracted",                  "title_hint": "Form 10-K Summary"}
+  ],
+  "char_ranges_html_text": "TBD-day3-or-day4 (alignment confidence varies; defer hand-verified offsets)"
+}
