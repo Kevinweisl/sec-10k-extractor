@@ -7,11 +7,11 @@
       "items_expected": 23,
       "item_recall": 1.0,
       "item_precision": 1.0,
-      "status_accuracy": 0.913,
-      "full_match_rate": 0.913,
+      "status_accuracy": 0.9565,
+      "full_match_rate": 0.9565,
       "text_alignment_rate": 0.7391,
       "html_alignment_rate": 0.8261,
-      "extraction_time_ms": 28977,
+      "extraction_time_ms": 30918,
       "xbrl": {
         "validated": true,
         "has_xbrl_data": true,
@@ -29,14 +29,9 @@
           "item": "15",
           "expected": "extracted",
           "actual": "partial"
-        },
-        {
-          "item": "1C",
-          "expected": "extracted",
-          "actual": "partial"
         }
       ],
-      "wall_time_ms": 71403,
+      "wall_time_ms": 132495,
       "error": null
     },
     {
@@ -46,11 +41,11 @@
       "items_expected": 14,
       "item_recall": 1.0,
       "item_precision": 1.0,
-      "status_accuracy": 0.4286,
-      "full_match_rate": 0.4286,
+      "status_accuracy": 0.5,
+      "full_match_rate": 0.5,
       "text_alignment_rate": 1.0,
       "html_alignment_rate": 0.0,
-      "extraction_time_ms": 30802,
+      "extraction_time_ms": 31409,
       "xbrl": {
         "validated": true,
         "has_xbrl_data": false,
@@ -95,17 +90,12 @@
           "actual": "incorporated_by_reference"
         },
         {
-          "item": "7",
-          "expected": "extracted",
-          "actual": "incorporated_by_reference"
-        },
-        {
           "item": "9",
           "expected": "extracted",
           "actual": "not_applicable"
         }
       ],
-      "wall_time_ms": 128677,
+      "wall_time_ms": 128320,
       "error": null
     },
     {
@@ -119,7 +109,7 @@
       "full_match_rate": 1.0,
       "text_alignment_rate": 0.5238,
       "html_alignment_rate": 0.4762,
-      "extraction_time_ms": 27085,
+      "extraction_time_ms": 31328,
       "xbrl": {
         "validated": true,
         "has_xbrl_data": true,
@@ -133,7 +123,7 @@
       "fp_items": [],
       "fn_items": [],
       "status_mismatches": [],
-      "wall_time_ms": 27143,
+      "wall_time_ms": 31411,
       "error": null
     }
   ],
@@ -141,10 +131,10 @@
     "filings": 3,
     "mean_item_recall": 1.0,
     "mean_item_precision": 1.0,
-    "mean_status_accuracy": 0.7805,
-    "mean_full_match_rate": 0.7805,
+    "mean_status_accuracy": 0.8188,
+    "mean_full_match_rate": 0.8188,
     "mean_text_alignment": 0.7543,
-    "mean_extraction_ms": 28954,
+    "mean_extraction_ms": 31218,
     "errors": 0
   }
 }
