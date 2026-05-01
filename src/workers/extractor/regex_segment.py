@@ -115,34 +115,62 @@ def regex_segment(raw_text: str) -> list[dict[str, Any]]:
     return max(candidates, key=len) if candidates else []
 
 
+# Valid 10-K item numbers per SEC Form 10-K. Anything outside this set
+# (e.g. "Item 405" from a 10-K405 reference, "Item 13(a)" sub-items) is a
+# false match and gets filtered.
+_VALID_ITEM_NUMBERS = frozenset({
+    "1", "1A", "1B", "1C", "2", "3", "4",
+    "5", "6", "7", "7A", "8", "9", "9A", "9B", "9C",
+    "10", "11", "12", "13", "14",
+    "15", "16",
+})
+
+
 def _segment_by_item_headings(raw_text: str) -> list[dict[str, Any]]:
-    """Slice raw_text by 'Item N.' line-start headings."""
-    headings = list(_RE_ITEM_HEADING.finditer(raw_text))
+    """Slice raw_text by 'Item N.' line-start headings.
+
+    Dedup strategy: group all matches by item_number. For each item_number,
+    pick the occurrence with the most body-content following (until the
+    next heading of any kind). This correctly disambiguates TOC entry
+    (small body distance) from body anchor (larger body distance), even
+    when multiple items have short bodies clustered together (e.g.
+    Chemical Banking 1995 where Items 10/11/12 all say "See Item 13 below"
+    in 100-char paragraphs).
+    """
+    raw_headings = list(_RE_ITEM_HEADING.finditer(raw_text))
+    headings = [m for m in raw_headings if m.group(1).upper() in _VALID_ITEM_NUMBERS]
     if not headings:
         return []
 
-    # Group consecutive headings — keep the one with the most body after it.
-    # If two headings are within MIN_BODY_CHARS of each other, the first is
-    # almost certainly a TOC entry pointing at the second (the real body).
-    keep: list[re.Match[str]] = []
+    # All heading positions (sorted) — used to compute "distance to next heading"
+    all_starts = sorted(m.start() for m in headings)
+
+    # Group by item_number
+    by_num: dict[str, list[re.Match[str]]] = {}
     for m in headings:
-        if keep and (m.start() - keep[-1].start()) < _MIN_BODY_CHARS:
-            keep[-1] = m
-        else:
-            keep.append(m)
+        by_num.setdefault(m.group(1).upper(), []).append(m)
+
+    # For each item_number with multiple occurrences, pick the one with the
+    # largest distance to the next heading (= most body content). Ties broken
+    # by later document position (body usually comes after TOC).
+    picks: list[re.Match[str]] = []
+    for num, matches in by_num.items():
+        best = max(
+            matches,
+            key=lambda m: (_distance_to_next_heading(m, all_starts), m.start()),
+        )
+        picks.append(best)
+
+    picks.sort(key=lambda m: m.start())
 
     items: list[dict[str, Any]] = []
-    seen_first_real_appearance: set[str] = set()
-    for i, m in enumerate(keep):
+    for i, m in enumerate(picks):
         item_num = m.group(1).upper()
         title = m.group(2).strip().rstrip(".").strip()
-        body_end = keep[i + 1].start() if i + 1 < len(keep) else len(raw_text)
+        body_end = picks[i + 1].start() if i + 1 < len(picks) else len(raw_text)
         content_text = raw_text[m.start():body_end].strip()
         if len(content_text) < 30:
             continue
-        if item_num in seen_first_real_appearance:
-            items = [it for it in items if it["item_number"] != item_num]
-        seen_first_real_appearance.add(item_num)
         items.append({
             "part": part_for_item(item_num),
             "item_number": item_num,
@@ -150,6 +178,16 @@ def _segment_by_item_headings(raw_text: str) -> list[dict[str, Any]]:
             "content_text": content_text,
         })
     return items
+
+
+def _distance_to_next_heading(m: "re.Match[str]", all_starts: list[int]) -> int:
+    """Distance from `m`'s end to the next heading position in all_starts."""
+    pos = m.start()
+    # binary search would be O(log n); list is small enough that linear is fine
+    for s in all_starts:
+        if s > pos:
+            return s - pos
+    return 10**9  # last heading — effectively infinite room
 
 
 def _segment_by_titles(raw_text: str) -> list[dict[str, Any]]:
