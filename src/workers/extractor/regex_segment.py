@@ -99,18 +99,21 @@ def regex_segment(raw_text: str) -> list[dict[str, Any]]:
     if not raw_text:
         return []
 
-    items = _segment_by_item_headings(raw_text)
-    if len(items) >= 8:
-        return items
-
-    # Cross-reference TOC filings (e.g. GE 2021) — parse the TOC at document
-    # end to recover the full Item list with status hints.
+    # Cross-reference TOC filings (e.g. GE 2021) — when a "CROSS REFERENCE
+    # INDEX" header is present, prefer the TOC parser over heading detection.
+    # The TOC is the only place the filing canonically declares each item's
+    # status (page-range / Not applicable / by-reference footnote), so we lose
+    # critical signal if we use the heading-based path even though it'd find
+    # the same item_numbers.
     toc_items = cross_reference_toc_segment(raw_text)
     if toc_items and len(toc_items) >= 8:
         return toc_items
 
+    items = _segment_by_item_headings(raw_text)
+    if len(items) >= 8:
+        return items
+
     title_items = _segment_by_titles(raw_text)
-    # Pick whichever path found more items.
     candidates = [c for c in (items, toc_items or [], title_items) if c]
     return max(candidates, key=len) if candidates else []
 

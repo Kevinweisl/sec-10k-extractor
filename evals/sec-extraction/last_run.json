@@ -1,0 +1,77 @@
+{
+  "results": [
+    {
+      "filing": "apple-2024",
+      "accession": "0000320193-24-000123",
+      "items_actual": 23,
+      "items_expected": 23,
+      "item_recall": 1.0,
+      "item_precision": 1.0,
+      "status_accuracy": 1.0,
+      "full_match_rate": 1.0,
+      "text_alignment_rate": 0.7391,
+      "html_alignment_rate": 0.8261,
+      "extraction_time_ms": 27766,
+      "xbrl": {
+        "validated": false
+      },
+      "fp_items": [],
+      "fn_items": [],
+      "status_mismatches": [],
+      "wall_time_ms": 27767,
+      "error": null
+    },
+    {
+      "filing": "chemical-banking-1995",
+      "accession": "0000950123-95-000706",
+      "items_actual": 14,
+      "items_expected": 14,
+      "item_recall": 1.0,
+      "item_precision": 1.0,
+      "status_accuracy": 1.0,
+      "full_match_rate": 1.0,
+      "text_alignment_rate": 1.0,
+      "html_alignment_rate": 0.0,
+      "extraction_time_ms": 28947,
+      "xbrl": {
+        "validated": false
+      },
+      "fp_items": [],
+      "fn_items": [],
+      "status_mismatches": [],
+      "wall_time_ms": 28947,
+      "error": null
+    },
+    {
+      "filing": "ge-2021",
+      "accession": "0000040545-21-000011",
+      "items_actual": 21,
+      "items_expected": 21,
+      "item_recall": 1.0,
+      "item_precision": 1.0,
+      "status_accuracy": 1.0,
+      "full_match_rate": 1.0,
+      "text_alignment_rate": 0.5238,
+      "html_alignment_rate": 0.4762,
+      "extraction_time_ms": 26161,
+      "xbrl": {
+        "validated": false
+      },
+      "fp_items": [],
+      "fn_items": [],
+      "status_mismatches": [],
+      "wall_time_ms": 26161,
+      "error": null
+    }
+  ],
+  "summary": {
+    "filings": 3,
+    "mean_item_recall": 1.0,
+    "mean_item_precision": 1.0,
+    "mean_status_accuracy": 1.0,
+    "mean_full_match_rate": 1.0,
+    "mean_text_alignment": 0.7543,
+    "mean_extraction_ms": 27624,
+    "errors": 0
+  }
+}
