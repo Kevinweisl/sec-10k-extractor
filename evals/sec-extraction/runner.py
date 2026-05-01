@@ -141,7 +141,7 @@ def _status_mismatches(actual_items, gold_items: list[dict]) -> list[dict]:
     return out
 
 
-def run_eval(gold_dir: Path, *, with_xbrl: bool = True) -> dict:
+def run_eval(gold_dir: Path, *, with_xbrl: bool = True, with_llm: bool = False) -> dict:
     """Run the eval over every gold filing under gold_dir.
 
     Returns a dict {results: [...], summary: {...}} suitable for
@@ -153,7 +153,11 @@ def run_eval(gold_dir: Path, *, with_xbrl: bool = True) -> dict:
         f = gold["filing"]
         t0 = time.perf_counter()
         try:
-            actual = extract_10k(f["cik"], f["accession"], xbrl_validate=with_xbrl)
+            actual = extract_10k(
+                f["cik"], f["accession"],
+                xbrl_validate=with_xbrl,
+                enable_llm_aug=with_llm,
+            )
             elapsed = int((time.perf_counter() - t0) * 1000)
             scores = score_filing(actual, gold)
             scores["wall_time_ms"] = elapsed
@@ -241,6 +245,9 @@ def main() -> int:
                    default=Path(__file__).resolve().parent / "gold")
     p.add_argument("--no-xbrl", action="store_true",
                    help="Skip XBRL Company Facts fetch (faster, offline-friendly)")
+    p.add_argument("--with-llm", action="store_true",
+                   help="Enable Phase 2 LLM ensemble augmentation (requires "
+                        "EXTRACTOR_AUG_MODELS in .env). Adds ~2-5 min per filing.")
     p.add_argument("--out", type=Path,
                    default=Path(__file__).resolve().parent / "last_run.json")
     args = p.parse_args()
@@ -249,7 +256,11 @@ def main() -> int:
         print(f"gold dir not found: {args.gold_dir}", file=sys.stderr)
         return 2
 
-    report = run_eval(args.gold_dir, with_xbrl=not args.no_xbrl)
+    report = run_eval(
+        args.gold_dir,
+        with_xbrl=not args.no_xbrl,
+        with_llm=args.with_llm,
+    )
     args.out.write_text(json.dumps(report, indent=2, default=str))
     print_markdown_report(report)
     print(f"\n(JSON artifact saved to {args.out})")

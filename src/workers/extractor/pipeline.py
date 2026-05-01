@@ -75,13 +75,16 @@ def extract_10k(
     accession: str,
     *,
     xbrl_validate: bool = True,
+    enable_llm_aug: bool = False,
 ) -> ExtractionResult:
-    """Run Phase 1 + Phase 3 (XBRL cross-check) extraction on a 10-K.
+    """Run Phase 1 (rules) + optional Phase 2 (LLM aug) + Phase 3 (XBRL) extraction.
 
-    Set xbrl_validate=False to skip the network call (useful in unit tests
-    or batch runs where XBRL is checked separately).
-
-    No LLM calls. Phase 2 (LLM augmentation) lives in a separate module.
+    Args:
+      xbrl_validate: fetch and cross-check SEC XBRL Company Facts (default on,
+        adds one network call per filing).
+      enable_llm_aug: run Phase 2 LLM ensemble vote on items where Phase 1
+        looks uncertain. Default off — keeps the deterministic path and the
+        existing eval baseline. Turn on per-run via the eval runner flag.
     """
     t0 = time.perf_counter()
     filing = find_10k_filing(cik, accession)
@@ -189,10 +192,18 @@ def extract_10k(
         is_abs_filing=is_abs,
         cover_page_incorporates=cover_ref,
     )
+    # Phase 2 — LLM augmentation (synchronous wrapper around async vote)
+    aug_warnings: list[str] = []
+    if enable_llm_aug and not is_abs:
+        items, aug_warnings = _run_llm_augmentation(items)
+
     result = ExtractionResult(
         filing=meta_filing,
         items=items,
-        meta=ExtractionMeta(extraction_time_ms=elapsed_ms),
+        meta=ExtractionMeta(
+            extraction_time_ms=elapsed_ms,
+            warnings=aug_warnings,
+        ),
     )
 
     # Phase 3 — XBRL Company Facts cross-validation
@@ -201,3 +212,72 @@ def extract_10k(
         result.xbrl_validation = validate_filing(result, cf)
 
     return result
+
+
+def _run_llm_augmentation(items: list[Item]) -> tuple[list[Item], list[str]]:
+    """For each item that triggers should_augment_status, run the K-vote
+    ensemble and apply the override if confidence is high enough.
+
+    Sync wrapper — uses asyncio.run on a fresh event loop, so this can be
+    called from sync code paths. For high-throughput batch jobs the eval
+    runner can do its own async fan-out instead.
+    """
+    import asyncio
+
+    from workers.extractor.llm_assist import (
+        augment_status,
+        should_augment_status,
+        should_override_phase1,
+    )
+
+    # Collect (index, item, trigger_reason) for items that need augmentation.
+    targets = []
+    for i, it in enumerate(items):
+        reason = should_augment_status(it.status, it.content_text)
+        if reason:
+            targets.append((i, it, reason))
+
+    if not targets:
+        return items, []
+
+    async def run_all():
+        coros = [
+            augment_status(
+                item_number=it.item_number,
+                item_title=it.item_title,
+                content_text=it.content_text,
+                phase1_status=it.status,
+                trigger_reason=reason,
+            )
+            for _, it, reason in targets
+        ]
+        return await asyncio.gather(*coros, return_exceptions=True)
+
+    try:
+        results = asyncio.run(run_all())
+    except RuntimeError:
+        # Already inside an event loop (e.g. inside an async test); skip
+        # rather than failing the whole extraction.
+        return items, ["LLM augmentation skipped: running event loop already active"]
+
+    warnings: list[str] = []
+    new_items = list(items)
+    for (idx, item, reason), vote in zip(targets, results, strict=True):
+        if isinstance(vote, BaseException):
+            warnings.append(
+                f"Item {item.item_number}: LLM aug failed ({type(vote).__name__}: {vote})"
+            )
+            continue
+        if should_override_phase1(vote, item.status):
+            warnings.append(
+                f"Item {item.item_number}: status {item.status} -> {vote.pick} "
+                f"(LLM K-vote, confidence={vote.confidence:.2f}, trigger={reason!r})"
+            )
+            new_items[idx] = item.model_copy(update={"status": vote.pick})
+        else:
+            warnings.append(
+                f"Item {item.item_number}: Phase 1 status={item.status} kept "
+                f"(LLM vote pick={vote.pick}, confidence={vote.confidence:.2f}, "
+                f"trigger={reason!r})"
+            )
+    return new_items, warnings
