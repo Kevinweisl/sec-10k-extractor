@@ -127,7 +127,27 @@ for K=3 — when DeepSeek returns, the knob means what it says.
       K=2 isn't.
 - [x] Fix `_provider_lock` event-loop binding bug (was masking
       filings 2-3 LLM calls in earlier runs, hiding the K=2 regression).
-- [ ] In README, label `--with-llm` as "K=3 ensemble required for the
-      published 0.923 status accuracy. Under K=2 (current — DeepSeek
-      offline) drops to 0.78; recommend running without `--with-llm` for
-      production."
+- [x] In README, label `--with-llm` as off-by-default with the threshold
+      knob explained, and call out the Chemical Banking 1995 gold-spec
+      ambiguity as the actual root cause (not just K count). Done in the
+      Honest limitations section.
+
+## Silver re-validate (PRE-SUBMIT, 2026-05-01 night)
+
+Re-ran `evals/sec-extraction/silver_runner.py` (deterministic, without LLM
+aug) on the 7-filing silver set after Day 6 changes (locator ladder,
+WeakKey semaphore, env-driven threshold knob). **Result: 0 violations
+across all 7 filings**, identical item counts to Day 4 baseline:
+
+| Filing | Items | Status distribution | XBRL consistent |
+|---|---|---|---|
+| berkshire-2026 | 17 | extracted=13, n/a=2, reserved=1, partial=1 | ✓ (464 facts) |
+| intel-2022 | 22 | extracted=13, n/a=5, IBR=4 | ✓ (606 facts) |
+| apple-2023 | 23 | extracted=13, n/a=4, reserved=1, IBR=5 | ✓ (455 facts) |
+| goldman-2024-10ka | 1 | extracted=1 | n/a (no XBRL on amendments) |
+| john-deere-owner-trust-2024 | 1 | non_standard=1 (ABS schema) | n/a |
+| berkshire-2019 | 20 | extracted=19, partial=1 | ✓ (358 facts) |
+| intel-2020 | 21 | extracted=12, n/a=5, IBR=4 | ✓ (638 facts) |
+
+**No regression** — all the Day 6 platform changes (selector cache, browser
+agent, LLM client refactors) were extractor-orthogonal as designed.
