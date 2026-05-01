@@ -31,6 +31,7 @@ from workers.extractor.schema import (
     ReferencedFiling,
 )
 from workers.extractor.segment import segment_with_edgartools
+from workers.extractor.xbrl_check import fetch_company_facts, validate_filing
 
 
 def _to_iso(d: date | datetime | str | None) -> str:
@@ -51,8 +52,19 @@ def _parse_iso_date(s: str | date | datetime | None) -> date:
     return date.fromisoformat(str(s)[:10])
 
 
-def extract_10k(cik: str | int, accession: str) -> ExtractionResult:
-    """Run Phase 1 extraction on a 10-K. No LLM calls."""
+def extract_10k(
+    cik: str | int,
+    accession: str,
+    *,
+    xbrl_validate: bool = True,
+) -> ExtractionResult:
+    """Run Phase 1 + Phase 3 (XBRL cross-check) extraction on a 10-K.
+
+    Set xbrl_validate=False to skip the network call (useful in unit tests
+    or batch runs where XBRL is checked separately).
+
+    No LLM calls. Phase 2 (LLM augmentation) lives in a separate module.
+    """
     t0 = time.perf_counter()
     filing = find_10k_filing(cik, accession)
 
@@ -140,8 +152,15 @@ def extract_10k(cik: str | int, accession: str) -> ExtractionResult:
         is_abs_filing=is_abs,
         cover_page_incorporates=cover_ref,
     )
-    return ExtractionResult(
+    result = ExtractionResult(
         filing=meta_filing,
         items=items,
         meta=ExtractionMeta(extraction_time_ms=elapsed_ms),
     )
+
+    # Phase 3 — XBRL Company Facts cross-validation
+    if xbrl_validate and not is_abs:
+        cf = fetch_company_facts(cik)
+        result.xbrl_validation = validate_filing(result, cf)
+
+    return result

@@ -74,7 +74,34 @@ class ExtractionMeta(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class NumericReconciliation(BaseModel):
+    """One concept's XBRL value vs. whether it was found in Item 8 text."""
+
+    concept: str                 # e.g. "us-gaap:Revenues"
+    xbrl_value: float
+    unit: str                    # "USD", "shares", etc.
+    fiscal_year: int | None = None
+    found_in_item8: bool         # whether the value appears in Item 8 content_text
+    match_form: str | None = None  # "exact" | "thousands" | "millions" | "billions" | None
+
+
+class XBRLValidation(BaseModel):
+    """Phase 3 cross-validation against SEC XBRL Company Facts.
+
+    None of these are hard failures — XBRL is one signal among several.
+    Honest reporting means we surface mismatches, not silently pass.
+    """
+
+    has_xbrl_data: bool                       # filing has any XBRL facts at all
+    total_facts_for_accession: int = 0        # facts tagged with this accession
+    item_8_status_consistent: bool = True     # status vs. fact-count agreement
+    period_aligned: bool = True               # XBRL period vs. our period_ending
+    numeric_reconciliations: list[NumericReconciliation] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
 class ExtractionResult(BaseModel):
     filing: FilingMeta
     items: list[Item]
     meta: ExtractionMeta
+    xbrl_validation: XBRLValidation | None = None
