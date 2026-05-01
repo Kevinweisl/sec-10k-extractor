@@ -43,40 +43,66 @@ Aggregate: gold status accuracy 1.000 → 0.923 with `--with-llm` at thresh=0.51
 - Other transitions: case-by-case.
 - **Cost**: complexity. Three thresholds, three justifications, harder to defend in interview.
 
-## Current K=2 reality (DeepSeek down)
+## Current K=2 reality (DeepSeek down) — VERIFIED EMPIRICALLY
 
-K=2 with `0.51` threshold ≈ K=3 with `0.99` threshold (both require unanimous,
-since K=2 ties fall back via `vote_role.fallback_used=True`). So *in current
-production state* we are effectively running Option B for free, with no code
-change. The `_OVERRIDE_THRESHOLD` knob would matter only when DeepSeek
-returns and we're back to K=3.
+We re-ran `python evals/sec-extraction/runner.py --with-llm` under K=2
+(Nemotron + Mistral) with threshold 0.51 after fixing a semaphore
+event-loop bug that had been masking LLM calls on filings 2-3 of the run.
 
-## Recommendation
+**Result: status accuracy DROPS to 0.78** (vs 0.92 under K=3, vs 1.00 under no-LLM).
 
-**Ship with default `LLM_AUG_OVERRIDE_THRESHOLD=0.51`**, with the env knob
-exposed for reviewers who prefer strict mode. Reasoning:
+| Run | Status Acc | Apple mismatches | Chemical mismatches | GE mismatches |
+|---|---|---|---|---|
+| Phase 1 only (no LLM) | **1.000** | 0 | 0 | 0 |
+| Phase 1 + LLM K=3 (DeepSeek+Nemotron+Mistral, thresh=0.51) | **0.923** | 2 (1C, 15) | 2 (6, 7) | 0 |
+| Phase 1 + LLM K=2 (Nemotron+Mistral, thresh=0.51) | **0.780** | 2 (1C, 15) | 8 (6, 7, 9, 10, 11, 12, 13, 14) | 0 |
 
-1. The current K=2 reality already enforces "unanimous" semantics, so the
-   conservative posture is what the eval would actually exhibit at submit
-   time. Reviewers running our code today get the conservative behavior
-   without touching anything.
-2. When DeepSeek availability returns, a reviewer can flip
-   `LLM_AUG_OVERRIDE_THRESHOLD=0.99` to keep that behavior, OR leave at 0.51
-   to capture 2/3-majority wins. The choice is theirs and explicit, not a
-   code default we have to defend.
-3. The eval JSON (`evals/sec-extraction/last_run.json`) records each
-   per-item vote pick + confidence + raw_text, so any divergence is
-   auditable line-by-line. There is no hidden behavior to read about in a
-   commit message.
+**Why K=2 is worse than K=3**: with three uncorrelated voters, DeepSeek
+acted as a *variance check* — if Nemotron and Mistral both said IBR but
+DeepSeek said extracted, the K=3 vote tied and `fallback_used=True`
+returned the Phase 1 answer. Removing DeepSeek removes that brake; now
+Nemotron+Mistral agreement (both Llama- / Mistral-derived families
+trained on overlapping corpora) is more easily achieved on Chemical
+Banking 1995 items where the LLM is over-confidently hallucinating
+"incorporated_by_reference".
 
-Per-status threshold (Option C) is valid future work; not worth the
-complexity for the corpus we ship with.
+**This invalidates the original K=2-with-thresh-0.51 plan.** Threshold
+0.99 doesn't help either — both models agree at confidence 1.0 on the
+wrong answer.
+
+## Revised recommendation — ship with LLM augmentation OFF for status
+
+Three viable postures:
+
+### A. Default OFF (recommended) — `enable_llm_aug=False` is the default
+
+Pipeline already exposes `enable_llm_aug` parameter. Eval runner already
+defaults `--with-llm` to OFF. **Change**: leave defaults as-is; document
+that LLM augmentation is K=3-only and degraded under K=2. Status accuracy
+on gold is then the deterministic 1.000.
+
+### B. Effectively disable via threshold knob
+
+Set `LLM_AUG_OVERRIDE_THRESHOLD=1.01` in `.env` (never satisfies
+`vote.confidence < 1.01`, since confidence ≤ 1.0). LLM votes still get
+collected and logged for audit; they just don't override Phase 1.
+
+### C. Wait for DeepSeek availability + ship at K=3
+
+Out of scope today.
+
+**Ship with A.** README already states `--with-llm` is opt-in. The
+`LLM_AUG_OVERRIDE_THRESHOLD=0.51` default stays as documented behavior
+for K=3 — when DeepSeek returns, the knob means what it says.
 
 ## Action items
 
 - [x] Make `_OVERRIDE_THRESHOLD` env-configurable via `LLM_AUG_OVERRIDE_THRESHOLD`.
-- [ ] Document the env in `.env.example` (no commit yet — `.env` is gitignored;
-      will land in a Day 6 / final cleanup commit if we add `.env.example`).
-- [ ] Note in README that threshold is configurable.
-- [ ] Re-run gold-with-LLM under K=2 at default threshold to verify the K=2
-      behavior matches expectation (effectively no-overrides for non-unanimous).
+- [x] Verify K=2 baseline against K=3 — confirms K=3 was variance-reducing,
+      K=2 isn't.
+- [x] Fix `_provider_lock` event-loop binding bug (was masking
+      filings 2-3 LLM calls in earlier runs, hiding the K=2 regression).
+- [ ] In README, label `--with-llm` as "K=3 ensemble required for the
+      published 0.923 status accuracy. Under K=2 (current — DeepSeek
+      offline) drops to 0.78; recommend running without `--with-llm` for
+      production."
