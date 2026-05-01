@@ -131,7 +131,10 @@ def extract_10k(
         html_cursor = 0
         for raw in sorted_segs:
             content_text: str = raw["content_text"]
-            status = classify_status(content_text)
+            # Cross-ref TOC parser provides a status_hint that's more reliable
+            # than rule-based classification on the bare TOC entry text.
+            hint = raw.get("status_hint")
+            status = hint if hint else classify_status(content_text)
             ref: ReferencedFiling | None = None
             if status in ("incorporated_by_reference", "partial") and cover_ref:
                 # All by-ref items in a typical 10-K reference the same proxy

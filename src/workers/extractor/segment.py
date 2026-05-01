@@ -18,6 +18,7 @@ from edgar import Filing
 from edgar.company_reports import TenK
 
 from workers.extractor.era import part_for_item
+from workers.extractor.regex_segment import edgartools_coverage_suspect, regex_segment
 
 
 # section_key like "part_i_item_1a" -> ("1", "1A") with proper canonicalization
@@ -96,11 +97,24 @@ def segment_with_edgartools(filing: Filing) -> dict[str, Any]:
         seen_item_nums.add(item_num)
 
     is_abs = _looks_like_abs(items, filing)
+
+    # Path 3: regex fallback when edgartools' coverage looks broken.
+    # Triggers on filings like GE 2021 (cross-ref TOC) where edgartools yields
+    # only 4 items with duplicate content. Skip for ABS filings — those are
+    # genuinely non-standard, not just mis-parsed.
+    used_regex_fallback = False
+    if not is_abs and edgartools_coverage_suspect(items) and raw_text:
+        regex_items = regex_segment(raw_text)
+        if len(regex_items) > len(items):
+            items = regex_items
+            used_regex_fallback = True
+
     return {
         "items": items,
         "is_abs_filing": is_abs,
         "raw_text": raw_text,
         "raw_html": raw_html or "",
+        "used_regex_fallback": used_regex_fallback,
     }
 
 
