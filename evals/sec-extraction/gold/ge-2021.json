@@ -1,0 +1,46 @@
+{
+  "_comment": "GE FY2020 10-K (filed 2021-02-12) — second hand-validated gold filing. Cross-reference TOC filing format: the body is topically organized (not per-Item) and a 'FORM 10-K CROSS REFERENCE INDEX' at the document end maps each Item to a page range, 'Not applicable', or footnote letter pointing at the 2021 Proxy Statement. Phase 1 + regex_segment cross-ref TOC parser recovers 21/21 items with correct status hints. content_text for each item is the TOC entry text rather than body excerpt — the body content is intentionally not extracted because it spans multiple pages without per-Item anchors.",
+  "filing": {
+    "cik": "40545",
+    "accession": "0000040545-21-000011",
+    "form_type": "10-K",
+    "filing_date": "2021-02-12",
+    "period_ending": "2020-12-31",
+    "primary_document": "ge-20201231.htm",
+    "format_quirks": ["cross-reference TOC", "topical body organization"]
+  },
+  "cover_page_incorporates": {
+    "_note": "GE 2021 incorporates Items 11-14 by reference to the 2021 Proxy Statement; TOC footnotes (a)/(b)/(c)/(d) explicitly call this out. Cover-page detection currently doesn't fire for this filing — TOC footnote parsing is a Phase 2 enhancement.",
+    "target_form": "DEF 14A",
+    "expected_year": 2021
+  },
+  "expected_items": [
+    {"part": 1, "item_number": "1",  "status": "extracted",                  "title_hint": "Business"},
+    {"part": 1, "item_number": "1A", "status": "extracted",                  "title_hint": "Risk Factors"},
+    {"part": 1, "item_number": "1B", "status": "not_applicable",             "title_hint": "Unresolved Staff Comments"},
+    {"part": 1, "item_number": "2",  "status": "extracted",                  "title_hint": "Properties"},
+    {"part": 1, "item_number": "3",  "status": "extracted",                  "title_hint": "Legal Proceedings"},
+    {"part": 1, "item_number": "4",  "status": "not_applicable",             "title_hint": "Mine Safety Disclosures"},
+    {"part": 2, "item_number": "5",  "status": "extracted",                  "title_hint": "Market for Registrant's Common Equity"},
+    {"part": 2, "item_number": "6",  "status": "not_applicable",             "title_hint": "Selected Financial Data"},
+    {"part": 2, "item_number": "7",  "status": "extracted",                  "title_hint": "Management's Discussion and Analysis"},
+    {"part": 2, "item_number": "7A", "status": "extracted",                  "title_hint": "Quantitative and Qualitative Disclosures"},
+    {"part": 2, "item_number": "8",  "status": "extracted",                  "title_hint": "Financial Statements and Supplementary Data"},
+    {"part": 2, "item_number": "9",  "status": "not_applicable",             "title_hint": "Changes in and Disagreements with Accountants"},
+    {"part": 2, "item_number": "9A", "status": "extracted",                  "title_hint": "Controls and Procedures"},
+    {"part": 2, "item_number": "9B", "status": "not_applicable",             "title_hint": "Other Information"},
+    {"part": 3, "item_number": "10", "status": "extracted",                  "title_hint": "Directors, Executive Officers"},
+    {"part": 3, "item_number": "11", "status": "incorporated_by_reference",  "title_hint": "Executive Compensation",
+     "_note": "TOC footnote (a) -> 2021 Proxy Statement Compensation section"},
+    {"part": 3, "item_number": "12", "status": "incorporated_by_reference",  "title_hint": "Security Ownership"},
+    {"part": 3, "item_number": "13", "status": "incorporated_by_reference",  "title_hint": "Certain Relationships and Related Transactions"},
+    {"part": 3, "item_number": "14", "status": "incorporated_by_reference",  "title_hint": "Principal Accountant Fees and Services"},
+    {"part": 4, "item_number": "15", "status": "extracted",                  "title_hint": "Exhibits and Financial Statement Schedules"},
+    {"part": 4, "item_number": "16", "status": "not_applicable",             "title_hint": "Form 10-K Summary"}
+  ],
+  "known_limitations": [
+    "Item 1C (Cybersecurity) absent: only required for fiscal years ending after 2023-12-15 — GE FY2020 predates this rule",
+    "char_range_text values are inside the TOC region (~677000-679000), reflecting that we extract from TOC entries; body anchors are not recovered without LLM",
+    "content_text for each item is '[Cross-reference TOC] Title (page_ref)' — body extraction is deferred to Phase 2 (LLM)"
+  ]
+}

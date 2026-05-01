@@ -1,0 +1,44 @@
+{
+  "_comment": "Chemical Banking Corporation FY1994 10-K (filed 1995-03-27 as form 10-K405) — third hand-validated gold filing. Pre-iXBRL SGML era. edgartools' TenK class asserts form ∈ {10-K, 10-K/A}, so filing.obj() returns None. The regex_segment fallback finds 14/14 items by scanning 'ITEM N: TITLE' headings (uppercase, colon-separated — typical pre-2003 banking style). Items 1A/1B/1C did not exist in 1994 (1A added 2005; 1C added 2023). Items 7A, 9A/9B/9C, 15, 16 also did not exist in 1994. The valid item set for FY1994 is {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}.",
+  "filing": {
+    "cik": "19617",
+    "accession": "0000950123-95-000706",
+    "form_type": "10-K405",
+    "filing_date": "1995-03-27",
+    "period_ending": "1994-12-31",
+    "primary_document": "(SGML/.txt — no primary HTML document)",
+    "registrant_name": "Chemical Banking Corporation",
+    "format_quirks": ["pre-XBRL SGML", "10-K405 form variant", "uppercase ITEM headings", "no Items 1A/1B/1C/7A/9A/9B/9C/15/16"]
+  },
+  "cover_page_incorporates": {
+    "_note": "Items 10-13 incorporate by reference to a Proxy Statement per 1995 SEC rules; the body sections say 'See Item 13 below' or directly reference the proxy. Item 13 contains the proxy reference. Cover-page DEF 14A detection regex doesn't reliably trigger for this era's filings."
+  },
+  "expected_items": [
+    {"part": 1, "item_number": "1",  "status": "extracted",                  "title_hint": "Business"},
+    {"part": 1, "item_number": "2",  "status": "extracted",                  "title_hint": "Properties"},
+    {"part": 1, "item_number": "3",  "status": "extracted",                  "title_hint": "Legal Proceedings"},
+    {"part": 1, "item_number": "4",  "status": "extracted",                  "title_hint": "Submission of Matters to a Vote of Security Holders",
+     "_note": "Item 4 in 1994 was 'Submission of Matters to Vote' — became 'Mine Safety Disclosures' post-2010 Dodd-Frank. Era-aware applicability is correctly tracked by era.py."},
+    {"part": 2, "item_number": "5",  "status": "extracted",                  "title_hint": "Market for Registrant's Common Equity"},
+    {"part": 2, "item_number": "6",  "status": "extracted",                  "title_hint": "Selected Financial Data"},
+    {"part": 2, "item_number": "7",  "status": "extracted",                  "title_hint": "MD&A"},
+    {"part": 2, "item_number": "8",  "status": "extracted",                  "title_hint": "Financial Statements and Supplementary Data"},
+    {"part": 2, "item_number": "9",  "status": "extracted",                  "title_hint": "Changes in and Disagreements with Accountants",
+     "_note": "Phase 1 reports 'extracted' but the body says 'See Item 13' — should be incorporated_by_reference. Phase 2 (LLM) candidate."},
+    {"part": 3, "item_number": "10", "status": "extracted",                  "title_hint": "Directors and Executive Officers",
+     "_note": "Body says 'See Item 13 below' — Phase 2 candidate to reclassify as incorporated_by_reference."},
+    {"part": 3, "item_number": "11", "status": "extracted",                  "title_hint": "Executive Compensation",
+     "_note": "Body says 'See Item 13 below' — Phase 2 candidate."},
+    {"part": 3, "item_number": "12", "status": "extracted",                  "title_hint": "Security Ownership",
+     "_note": "Body says 'See Item 13 below' — Phase 2 candidate."},
+    {"part": 3, "item_number": "13", "status": "extracted",                  "title_hint": "Certain Relationships and Related Transactions"},
+    {"part": 4, "item_number": "14", "status": "extracted",                  "title_hint": "Exhibits, Financial Statement Schedules and Reports on Form 8-K",
+     "_note": "Body is 414K chars — includes the full financial statements appendix. This is correct for 1994 banking 10-Ks where Item 14 captures all exhibits."}
+  ],
+  "known_limitations": [
+    "Status accuracy: 9/14 items correct under rules-only Phase 1. Items 9, 10, 11, 12 should be 'incorporated_by_reference' (their bodies cross-reference Item 13) but Phase 1's regex doesn't recognize the 'See Item N below' pattern. These are Phase 2 (LLM) candidates.",
+    "Char ranges are accurate (validated against raw_text positions).",
+    "XBRL Company Facts cross-validation will return has_xbrl_data=False (1994 filing predates SEC XBRL adoption — XBRL became mandatory for large filers in 2009).",
+    "1994-era 10-Ks did not have Items 1A/1B/1C/7A/9A/9B/9C/15/16 — applicable_in_era should mark these correctly (era.py handles the introduction dates)."
+  ]
+}
