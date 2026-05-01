@@ -15,6 +15,7 @@ Phase 2 (LLM augmentation) and Phase 3 (XBRL cross-check) come on Day 3.
 
 from __future__ import annotations
 
+import re
 import time
 from datetime import date, datetime
 
@@ -40,6 +41,23 @@ def _to_iso(d: date | datetime | str | None) -> str:
     if isinstance(d, str):
         return d
     return d.isoformat() if hasattr(d, "isoformat") else str(d)
+
+
+_ITEM_SORT_RX = re.compile(r"(\d+)([A-Za-z]?)")
+
+
+def _item_sort_key(seg: dict) -> tuple[int, int, str]:
+    """Sort segments by document order: (part, item_num, item_letter).
+
+    "1" < "1A" < "1B" < "2" < ... so items in Part I come out as 1, 1A, 1B, 1C,
+    2, 3, 4 even though edgartools may yield them in a different order.
+    """
+    part = int(seg.get("part", 99))
+    item_num = str(seg.get("item_number", ""))
+    m = _ITEM_SORT_RX.match(item_num)
+    if m:
+        return (part, int(m.group(1)), m.group(2).upper())
+    return (part, 999, item_num)
 
 
 def _parse_iso_date(s: str | date | datetime | None) -> date:
@@ -103,7 +121,15 @@ def extract_10k(
             applicable_in_era=False,
         ))
     else:
-        for raw in seg["items"]:
+        # Sequential alignment: 10-K items appear in document order
+        # (Part I items 1..1C, 2..4 → Part II 5..9C → Part III 10..14 → Part IV 15..16),
+        # so we sort segments by (part, item_number) and thread a cursor that
+        # only moves forward. This fixes by-ref boilerplate collisions (Items 11-14
+        # all share near-identical text and a naive matcher resolves them to one offset).
+        sorted_segs = sorted(seg["items"], key=_item_sort_key)
+        text_cursor = 0
+        html_cursor = 0
+        for raw in sorted_segs:
             content_text: str = raw["content_text"]
             status = classify_status(content_text)
             ref: ReferencedFiling | None = None
@@ -111,8 +137,16 @@ def extract_10k(
                 # All by-ref items in a typical 10-K reference the same proxy
                 ref = ReferencedFiling(**cover_meta) if cover_meta else None
 
-            text_range = align_to_source(content_text, raw_text)
-            html_range = align_to_source(content_text, raw_html) if raw_html else None
+            text_range = align_to_source(content_text, raw_text, min_start=text_cursor)
+            html_range = align_to_source(content_text, raw_html, min_start=html_cursor) if raw_html else None
+
+            # Advance cursors to enforce sequential ordering. Only advance on
+            # successful match — failed matches leave cursor where it was so
+            # the next item retries from the same baseline.
+            if text_range is not None:
+                text_cursor = text_range[1]
+            if html_range is not None:
+                html_cursor = html_range[1]
 
             items.append(Item(
                 part=raw["part"],
