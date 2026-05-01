@@ -177,10 +177,22 @@ async def augment_status(
 
 
 # ── Decision policy: when to override Phase 1 ────────────────────────────────
+#
+# `LLM_AUG_OVERRIDE_THRESHOLD` env knob (default 0.51):
+#   - 0.51 — any majority vote overrides Phase 1 (2/3 under K=3, unanimous
+#     under K=2). Captures more wins (e.g. Chemical Banking 1995 Items 9-12
+#     correctly upgraded to incorporated_by_reference) at the cost of some
+#     losses (e.g. Apple 2024 Items 1C/15 reclassified to "partial").
+#   - 0.99 — only unanimous votes override (3/3 under K=3, never under K=2
+#     since a tie falls back). Conservative; prefers Phase 1 deterministic
+#     output. Use when Phase 1 precision is more important than LLM recall.
+#
+# Either choice surfaces every divergence in the eval output (vote pick,
+# confidence per filing item) so a reviewer can audit individual cases.
 
-# Confidence threshold to overturn Phase 1. Set just above 0.5 — a 2/3 majority
-# is enough, but a 1-1-1 tie (confidence=0) is not.
-_OVERRIDE_THRESHOLD = 0.51
+import os as _os
+
+_OVERRIDE_THRESHOLD = float(_os.environ.get("LLM_AUG_OVERRIDE_THRESHOLD", "0.51"))
 
 
 def should_override_phase1(vote: VoteResult, phase1_status: Status) -> bool:
