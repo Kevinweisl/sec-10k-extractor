@@ -204,14 +204,29 @@ def _resolve(obj: Any, attr: str) -> Any:
     return v
 
 
+_RE_REG_AB_ITEM = re.compile(
+    r"item\s+11(?:0\d|1\d|2[0-3])\s+of\s+regulation\s+ab",
+    re.IGNORECASE,
+)
+
+
 def _looks_like_abs(items: list[dict[str, Any]], filing: Filing) -> bool:
     """Detect Asset-Backed Securities 10-K (Reg AB schema).
 
-    Requires *positive* evidence ("regulation ab" or "asset-backed" early in
-    the filing). Does NOT trigger on empty edgartools results — those are
-    handled by the regex_segment fallback in the caller. Pre-XBRL 10-Ks
-    (e.g. 10-K405 from 1995) and cross-reference TOC filings (GE 2021) often
-    yield no edgartools items but are NOT ABS filings.
+    Requires *positive* evidence: any of
+      - "regulation ab" / "asset-backed" / "asset backed" anywhere in the first
+        20K chars (some ABS filings put the boilerplate Item 1-9C cover-page
+        section before the Reg AB declaration)
+      - "Item 11XX of Regulation AB" pattern (Reg AB defines its own item
+        numbers in the 1100-1123 range — a very specific positive signal)
+
+    Does NOT trigger on empty edgartools results — those are handled by the
+    regex_segment fallback in the caller. Pre-XBRL 10-Ks (form 10-K405) and
+    cross-reference TOC filings (GE 2021) yield no edgartools items but are
+    NOT ABS filings.
     """
-    text_l = (_resolve(filing, "text") or "")[:5000].lower()
-    return "regulation ab" in text_l or "asset-backed" in text_l
+    raw = _resolve(filing, "text") or ""
+    text_l = raw[:20000].lower()
+    if "regulation ab" in text_l or "asset-backed" in text_l or "asset backed" in text_l:
+        return True
+    return bool(_RE_REG_AB_ITEM.search(text_l))

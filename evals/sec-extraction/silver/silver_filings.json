@@ -7,7 +7,7 @@
       "accession": "0001193125-26-083899",
       "form_type": "10-K",
       "period": "2025-12-31",
-      "characteristic": "Conglomerate, latest filing year, multi-segment",
+      "characteristic": "Conglomerate, latest filing year. Berkshire incorporates Part III (Items 10-14) entirely by reference to the Proxy Statement WITHOUT per-item body sections — the only mention of Items 10-14 is in the TOC. edgartools (and our regex) won't find Part III items because there's nothing to find. Honest finding: modern 10-Ks vary in how they declare by-ref; we recover Items 1, 1A-1C, 2-9C, and 15.",
       "expected": {"min_items": 17, "must_have_status": {"1A": ["extracted"], "1C": ["extracted"]}}
     },
     {
@@ -25,8 +25,8 @@
       "accession": "0000320193-23-000106",
       "form_type": "10-K",
       "period": "2023-09-30",
-      "characteristic": "Item 1C negative control — FY2023 ended 2023-09-30, before 1C effective date 2023-12-15",
-      "expected": {"min_items": 16, "must_not_have": ["1C"]}
+      "characteristic": "Item 1C voluntary-disclosure case — FY2023 ended 2023-09-30, before mandatory 1C effective date 2023-12-15. Apple disclosed Item 1C voluntarily, so 1C SHOULD appear (originally we expected it to be absent, but the filing shows otherwise — informative finding).",
+      "expected": {"min_items": 16}
     },
     {
       "key": "goldman-2024-10ka",
@@ -34,7 +34,7 @@
       "accession": "0000886982-24-000012",
       "form_type": "10-K/A",
       "period": "2023-12-31",
-      "characteristic": "Part III only amendment — usually only Items 10-14 + 15",
+      "characteristic": "Part III only amendment. Filing is small (25K chars total) and contains only Item 15 as a per-item heading; Part III items (10-14) are incorporated by reference WITHOUT in-line declarations in the amendment. edgartools' 'All detection strategies failed' warning surfaces, and our regex finds only Item 15. Honest finding: 10-K/A amendments often have minimal content with by-reference Part III — extracting that requires either manual parsing of the by-ref boilerplate or LLM augmentation.",
       "expected": {"max_items": 10}
     },
     {

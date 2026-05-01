@@ -7,29 +7,18 @@
       "items_expected": 23,
       "item_recall": 1.0,
       "item_precision": 1.0,
-      "status_accuracy": 0.913,
-      "full_match_rate": 0.913,
+      "status_accuracy": 1.0,
+      "full_match_rate": 1.0,
       "text_alignment_rate": 0.7391,
       "html_alignment_rate": 0.8261,
-      "extraction_time_ms": 28967,
+      "extraction_time_ms": 28903,
       "xbrl": {
         "validated": false
       },
       "fp_items": [],
       "fn_items": [],
-      "status_mismatches": [
-        {
-          "item": "15",
-          "expected": "extracted",
-          "actual": "partial"
-        },
-        {
-          "item": "1C",
-          "expected": "extracted",
-          "actual": "partial"
-        }
-      ],
-      "wall_time_ms": 105485,
+      "status_mismatches": [],
+      "wall_time_ms": 28904,
       "error": null
     },
     {
@@ -39,29 +28,18 @@
       "items_expected": 14,
       "item_recall": 1.0,
       "item_precision": 1.0,
-      "status_accuracy": 0.8571,
-      "full_match_rate": 0.8571,
+      "status_accuracy": 1.0,
+      "full_match_rate": 1.0,
       "text_alignment_rate": 1.0,
       "html_alignment_rate": 0.0,
-      "extraction_time_ms": 28818,
+      "extraction_time_ms": 28680,
       "xbrl": {
         "validated": false
       },
       "fp_items": [],
       "fn_items": [],
-      "status_mismatches": [
-        {
-          "item": "6",
-          "expected": "extracted",
-          "actual": "incorporated_by_reference"
-        },
-        {
-          "item": "7",
-          "expected": "extracted",
-          "actual": "incorporated_by_reference"
-        }
-      ],
-      "wall_time_ms": 67248,
+      "status_mismatches": [],
+      "wall_time_ms": 28680,
       "error": null
     },
     {
@@ -75,14 +53,14 @@
       "full_match_rate": 1.0,
       "text_alignment_rate": 0.5238,
       "html_alignment_rate": 0.4762,
-      "extraction_time_ms": 27842,
+      "extraction_time_ms": 27554,
       "xbrl": {
         "validated": false
       },
       "fp_items": [],
       "fn_items": [],
       "status_mismatches": [],
-      "wall_time_ms": 27842,
+      "wall_time_ms": 27554,
       "error": null
     }
   ],
@@ -90,10 +68,10 @@
     "filings": 3,
     "mean_item_recall": 1.0,
     "mean_item_precision": 1.0,
-    "mean_status_accuracy": 0.9234,
-    "mean_full_match_rate": 0.9234,
+    "mean_status_accuracy": 1.0,
+    "mean_full_match_rate": 1.0,
     "mean_text_alignment": 0.7543,
-    "mean_extraction_ms": 28542,
+    "mean_extraction_ms": 28379,
     "errors": 0
   }
 }
