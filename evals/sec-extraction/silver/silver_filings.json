@@ -1,0 +1,68 @@
+{
+  "_comment": "Silver set — 7 filings beyond the 3 hand-validated gold. Ground truth is programmatic (count items found, era-applicable status distribution, edgartools agreement) rather than hand-validated. Used to detect regressions and surface failure modes that gold is too narrow to catch.",
+  "filings": [
+    {
+      "key": "berkshire-2026",
+      "cik": "1067983",
+      "accession": "0001193125-26-083899",
+      "form_type": "10-K",
+      "period": "2025-12-31",
+      "characteristic": "Conglomerate, latest filing year, multi-segment",
+      "expected": {"min_items": 17, "must_have_status": {"1A": ["extracted"], "1C": ["extracted"]}}
+    },
+    {
+      "key": "intel-2022",
+      "cik": "50863",
+      "accession": "0000050863-22-000007",
+      "form_type": "10-K",
+      "period": "2021-12-25",
+      "characteristic": "Semiconductor; Item 9C era boundary (introduced 2022-01-10)",
+      "expected": {"min_items": 17, "applicable": ["1", "1A", "1B", "2", "3", "4", "5", "7", "7A", "8", "9", "9A", "9B", "10", "11", "12", "13", "14", "15"]}
+    },
+    {
+      "key": "apple-2023",
+      "cik": "320193",
+      "accession": "0000320193-23-000106",
+      "form_type": "10-K",
+      "period": "2023-09-30",
+      "characteristic": "Item 1C negative control — FY2023 ended 2023-09-30, before 1C effective date 2023-12-15",
+      "expected": {"min_items": 16, "must_not_have": ["1C"]}
+    },
+    {
+      "key": "goldman-2024-10ka",
+      "cik": "886982",
+      "accession": "0000886982-24-000012",
+      "form_type": "10-K/A",
+      "period": "2023-12-31",
+      "characteristic": "Part III only amendment — usually only Items 10-14 + 15",
+      "expected": {"max_items": 10}
+    },
+    {
+      "key": "john-deere-owner-trust-2024",
+      "cik": "1816589",
+      "accession": "0001558370-24-000566",
+      "form_type": "10-K",
+      "period": "2023-12-31",
+      "characteristic": "ABS Reg AB filing — non_standard schema",
+      "expected": {"is_abs": true, "items_should_be": [{"item_number": "abs", "status": "non_standard"}]}
+    },
+    {
+      "key": "berkshire-2019",
+      "cik": "1067983",
+      "accession": "0001193125-19-048926",
+      "form_type": "10-K",
+      "period": "2018-12-31",
+      "characteristic": "Pre-iXBRL conglomerate — same registrant as 2026 entry but different era",
+      "expected": {"min_items": 17}
+    },
+    {
+      "key": "intel-2020",
+      "cik": "50863",
+      "accession": "0000050863-20-000011",
+      "form_type": "10-K",
+      "period": "2019-12-28",
+      "characteristic": "Large file (~143 MB) — performance/memory smoke test",
+      "expected": {"min_items": 17}
+    }
+  ]
+}

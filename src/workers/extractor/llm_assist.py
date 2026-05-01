@@ -67,14 +67,20 @@ def should_augment_status(phase1_status: Status, content_text: str) -> str | Non
     """
     if phase1_status != "extracted":
         return None
-    n = len(content_text or "")
+    text = content_text or ""
+    # Cross-reference TOC items (GE 2021 style) carry the TOC entry as their
+    # content_text. The status_hint from the TOC is more authoritative than
+    # anything an LLM can infer from a 50-char snippet — never augment these.
+    if text.lstrip().startswith("[Cross-reference TOC]"):
+        return None
+    n = len(text)
     if n < 500:
         return f"short content ({n} chars) — possible missed by-reference"
-    if _RE_INCORPORATED_HINT.search(content_text):
+    if _RE_INCORPORATED_HINT.search(text):
         return "contains 'incorporated by reference' phrase"
-    if _RE_SEE_ITEM_HINT.search(content_text):
+    if _RE_SEE_ITEM_HINT.search(text):
         return "contains 'see Item N' within-document cross-reference"
-    if _RE_REMAINING_INFO_HINT.search(content_text):
+    if _RE_REMAINING_INFO_HINT.search(text):
         return "contains 'remaining/additional information by this Item' (partial signal)"
     return None
 

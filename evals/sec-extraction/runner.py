@@ -27,6 +27,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
+# Load .env so LLM augmentation finds NIM_* and EXTRACTOR_AUG_MODELS env vars.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(ROOT / ".env")
+except ImportError:
+    pass
+
 from workers.extractor.iou import compute_iou, mean_iou  # noqa: E402
 from workers.extractor.pipeline import extract_10k  # noqa: E402
 
