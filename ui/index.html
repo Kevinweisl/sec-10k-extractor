@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEC 10-K Item Extractor</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>SEC 10-K Item Extractor</h1>
+  <small>Phase 1 deterministic rules + Phase 3 XBRL cross-check. Public demo: 6 req/min/IP.</small>
+</header>
+
+<main>
+  <section id="intro">
+    <p class="lead">
+      Item-level structured extraction from SEC 10-K filings. Picks <code>extracted</code> /
+      <code>incorporated_by_reference</code> / <code>not_applicable</code> / <code>reserved</code> /
+      <code>partial</code> / <code>non_standard</code> per item, surfaces XBRL cross-checks, and
+      reports honest failure modes (pre-iXBRL filings, Reg AB ABS, cross-reference TOC).
+    </p>
+  </section>
+
+  <section id="demos">
+    <h2>Quick demos <small>cached, 0 cost, 0 latency</small></h2>
+    <div id="demo-gold" class="demo-row">
+      <h3>Gold <small>hand-validated against EDGAR</small></h3>
+      <div class="demo-buttons" data-source="gold"></div>
+    </div>
+    <div id="demo-silver" class="demo-row">
+      <h3>Silver <small>programmatic validation: invariant checks, no hand annotations</small></h3>
+      <div class="demo-buttons" data-source="silver"></div>
+    </div>
+  </section>
+
+  <section id="live">
+    <h2>Or extract any 10-K live <small>Phase 1 only on this public demo</small></h2>
+    <form id="extract-form">
+      <label>CIK
+        <input id="cik" type="text" pattern="\d{1,10}" maxlength="10"
+               placeholder="320193" autocomplete="off" required>
+      </label>
+      <label>Accession
+        <input id="accession" type="text" pattern="\d{10}-\d{2}-\d{6}" maxlength="20"
+               placeholder="0000320193-24-000123" autocomplete="off" required>
+      </label>
+      <button type="submit" id="run-btn">Extract</button>
+    </form>
+    <p class="hint">
+      CIK is the SEC's filer ID (digits only). Accession is the 18-digit dashed form
+      from EDGAR, e.g. <code>0000320193-24-000123</code>.
+      Live extraction runs deterministic rules + XBRL cross-check; expect 3-30 sec.
+    </p>
+  </section>
+
+  <section id="result" hidden>
+    <div id="status"></div>
+    <div id="filing-meta"></div>
+    <div id="items-list"></div>
+    <div id="footer-meta"></div>
+  </section>
+</main>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
