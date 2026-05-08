@@ -1,0 +1,36 @@
+{
+  "filing": {
+    "cik": "1816589",
+    "accession": "0001558370-24-000566",
+    "form_type": "10-K",
+    "filing_date": "2024-01-26",
+    "period_ending": "2023-10-29",
+    "primary_document": "tmb-20231029x10k.htm",
+    "is_inline_xbrl": true,
+    "is_abs_filing": true,
+    "cover_page_incorporates": null
+  },
+  "items": [
+    {
+      "part": 0,
+      "item_number": "abs",
+      "item_title": "Asset-Backed Securities (Reg AB) filing — non-standard schema",
+      "status": "non_standard",
+      "content_text": "",
+      "char_range_html": null,
+      "char_range_text": null,
+      "applicable_in_era": false,
+      "references": null,
+      "segments": null
+    }
+  ],
+  "meta": {
+    "parser_version": "0.1.0",
+    "extraction_time_ms": 1180,
+    "cost_usd": 0.0,
+    "warnings": [],
+    "cache_built_at": "2026-05-08T15:24:45Z",
+    "cache_build_elapsed_ms": 1180
+  },
+  "xbrl_validation": null
+}

@@ -1,0 +1,373 @@
+{
+  "filing": {
+    "cik": "40545",
+    "accession": "0000040545-21-000011",
+    "form_type": "10-K",
+    "filing_date": "2021-02-12",
+    "period_ending": "2020-12-31",
+    "primary_document": "ge-20201231.htm",
+    "is_inline_xbrl": true,
+    "is_abs_filing": false,
+    "cover_page_incorporates": null
+  },
+  "items": [
+    {
+      "part": 1,
+      "item_number": "1",
+      "item_title": "Business",
+      "status": "extracted",
+      "content_text": "[Cross-reference TOC] Business (4, 10-18, 103-104)",
+      "char_range_html": null,
+      "char_range_text": null,
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 1,
+      "item_number": "1A",
+      "item_title": "Risk Factors",
+      "status": "extracted",
+      "content_text": "[Cross-reference TOC] Risk Factors (44-51)",
+      "char_range_html": null,
+      "char_range_text": null,
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 1,
+      "item_number": "1B",
+      "item_title": "Unresolved Staff Comments",
+      "status": "not_applicable",
+      "content_text": "[Cross-reference TOC] Unresolved Staff Comments (Not applicable)",
+      "char_range_html": null,
+      "char_range_text": null,
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 1,
+      "item_number": "2",
+      "item_title": "Properties",
+      "status": "extracted",
+      "content_text": "[Cross-reference TOC] Properties (4)",
+      "char_range_html": null,
+      "char_range_text": null,
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 1,
+      "item_number": "3",
+      "item_title": "Legal Proceedings",
+      "status": "extracted",
+      "content_text": "[Cross-reference TOC] Legal Proceedings (98-101)",
+      "char_range_html": null,
+      "char_range_text": null,
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 1,
+      "item_number": "4",
+      "item_title": "Mine Safety Disclosures",
+      "status": "not_applicable",
+      "content_text": "[Cross-reference TOC] Mine Safety Disclosures (Not applicable)",
+      "char_range_html": null,
+      "char_range_text": null,
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 2,
+      "item_number": "5",
+      "item_title": "Market for Registrant’s Common Equity, Related Stockholder Matters and Issuer Purchases of Equity Securities",
+      "status": "extracted",
+      "content_text": "[Cross-reference TOC] Market for Registrant’s Common Equity, Related Stockholder Matters and Issuer Purchases of Equity Securities (44)",
+      "char_range_html": [
+        7189746,
+        7189881
+      ],
+      "char_range_text": [
+        677001,
+        677136
+      ],
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 2,
+      "item_number": "6",
+      "item_title": "Selected Financial Data",
+      "status": "not_applicable",
+      "content_text": "[Cross-reference TOC] Selected Financial Data (Not applicable)",
+      "char_range_html": null,
+      "char_range_text": null,
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 2,
+      "item_number": "7",
+      "item_title": "Management’s Discussion and Analysis of Financial Condition and Results of Operations",
+      "status": "extracted",
+      "content_text": "[Cross-reference TOC] Management’s Discussion and Analysis of Financial Condition and Results of Operations (5-43)",
+      "char_range_html": [
+        7192001,
+        7192115
+      ],
+      "char_range_text": [
+        677307,
+        677421
+      ],
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 2,
+      "item_number": "7A",
+      "item_title": "Quantitative and Qualitative Disclosures About Market Risk",
+      "status": "extracted",
+      "content_text": "[Cross-reference TOC] Quantitative and Qualitative Disclosures About Market Risk (27, 94-97)",
+      "char_range_html": [
+        7193171,
+        7193263
+      ],
+      "char_range_text": [
+        677460,
+        677552
+      ],
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 2,
+      "item_number": "8",
+      "item_title": "Financial Statements and Supplementary Data",
+      "status": "extracted",
+      "content_text": "[Cross-reference TOC] Financial Statements and Supplementary Data (56-106)",
+      "char_range_html": [
+        7194318,
+        7194392
+      ],
+      "char_range_text": [
+        677613,
+        677687
+      ],
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 2,
+      "item_number": "9",
+      "item_title": "Changes in and Disagreements With Accountants on Accounting and Financial Disclosure",
+      "status": "not_applicable",
+      "content_text": "[Cross-reference TOC] Changes in and Disagreements With Accountants on Accounting and Financial Disclosure (Not applicable)",
+      "char_range_html": [
+        7195447,
+        7195570
+      ],
+      "char_range_text": [
+        677766,
+        677889
+      ],
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 2,
+      "item_number": "9A",
+      "item_title": "Controls and Procedures",
+      "status": "extracted",
+      "content_text": "[Cross-reference TOC] Controls and Procedures (52)",
+      "char_range_html": null,
+      "char_range_text": [
+        677919,
+        677969
+      ],
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 2,
+      "item_number": "9B",
+      "item_title": "Other Information",
+      "status": "not_applicable",
+      "content_text": "[Cross-reference TOC] Other Information (Not applicable)",
+      "char_range_html": null,
+      "char_range_text": null,
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 3,
+      "item_number": "10",
+      "item_title": "Directors, Executive Officers and Corporate Governance",
+      "status": "extracted",
+      "content_text": "[Cross-reference TOC] Directors, Executive Officers and Corporate Governance (107)",
+      "char_range_html": [
+        7199044,
+        7199126
+      ],
+      "char_range_text": [
+        678378,
+        678460
+      ],
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 3,
+      "item_number": "11",
+      "item_title": "Executive Compensation",
+      "status": "incorporated_by_reference",
+      "content_text": "[Cross-reference TOC] Executive Compensation ((a))",
+      "char_range_html": null,
+      "char_range_text": null,
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 3,
+      "item_number": "12",
+      "item_title": "Security Ownership of Certain Beneficial Owners and Management and Related Stockholder Matters",
+      "status": "incorporated_by_reference",
+      "content_text": "[Cross-reference TOC] Security Ownership of Certain Beneficial Owners and Management and Related Stockholder Matters ((b), 92)",
+      "char_range_html": [
+        7201230,
+        7201356
+      ],
+      "char_range_text": [
+        678684,
+        678810
+      ],
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 3,
+      "item_number": "13",
+      "item_title": "Certain Relationships and Related Transactions, and Director Independence",
+      "status": "incorporated_by_reference",
+      "content_text": "[Cross-reference TOC] Certain Relationships and Related Transactions, and Director Independence ((c))",
+      "char_range_html": [
+        7202412,
+        7202513
+      ],
+      "char_range_text": [
+        678837,
+        678938
+      ],
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 3,
+      "item_number": "14",
+      "item_title": "Principal Accountant Fees and Services",
+      "status": "incorporated_by_reference",
+      "content_text": "[Cross-reference TOC] Principal Accountant Fees and Services ((d))",
+      "char_range_html": [
+        7203569,
+        7203635
+      ],
+      "char_range_text": [
+        678990,
+        679056
+      ],
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 4,
+      "item_number": "15",
+      "item_title": "Exhibits and Financial Statement Schedules",
+      "status": "extracted",
+      "content_text": "[Cross-reference TOC] Exhibits and Financial Statement Schedules (108-110)",
+      "char_range_html": [
+        7204890,
+        7204964
+      ],
+      "char_range_text": [
+        679296,
+        679370
+      ],
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    },
+    {
+      "part": 4,
+      "item_number": "16",
+      "item_title": "Form 10-K Summary",
+      "status": "not_applicable",
+      "content_text": "[Cross-reference TOC] Form 10-K Summary (Not applicable)",
+      "char_range_html": null,
+      "char_range_text": null,
+      "applicable_in_era": true,
+      "references": null,
+      "segments": null
+    }
+  ],
+  "meta": {
+    "parser_version": "0.1.0",
+    "extraction_time_ms": 49222,
+    "cost_usd": 0.0,
+    "warnings": [],
+    "cache_built_at": "2026-05-08T15:17:15Z",
+    "cache_build_elapsed_ms": 50114
+  },
+  "xbrl_validation": {
+    "has_xbrl_data": true,
+    "total_facts_for_accession": 771,
+    "item_8_status_consistent": true,
+    "period_aligned": true,
+    "numeric_reconciliations": [
+      {
+        "concept": "Revenues",
+        "xbrl_value": 97012000000.0,
+        "unit": "USD",
+        "fiscal_year": 2020,
+        "found_in_item8": false,
+        "match_form": null
+      },
+      {
+        "concept": "NetIncomeLoss",
+        "xbrl_value": -22355000000.0,
+        "unit": "USD",
+        "fiscal_year": 2020,
+        "found_in_item8": false,
+        "match_form": null
+      },
+      {
+        "concept": "Assets",
+        "xbrl_value": 265177000000.0,
+        "unit": "USD",
+        "fiscal_year": 2020,
+        "found_in_item8": false,
+        "match_form": null
+      }
+    ],
+    "warnings": [
+      "3/3 canonical XBRL values not found in Item 8 text (concepts: Revenues, NetIncomeLoss, Assets). May indicate truncated extraction or non-narrative financial statements."
+    ]
+  }
+}
