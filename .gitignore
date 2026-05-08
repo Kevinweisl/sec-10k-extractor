@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Tooling
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Local config — never commit credentials
+.env
+.env.local
+.env.*.local
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Local-only build artefacts
+*.log
+
+# edgartools auto-creates data/xbrl_cache/ for HTTP caching at runtime
+data/
+
