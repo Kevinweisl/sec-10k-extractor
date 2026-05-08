@@ -43,7 +43,7 @@ Phase 1 hits 1.000 status accuracy on the 3-filing hand-validated gold set. 95%+
 
 ## Live demo
 
-**https://sec-10k-extractor-kevin.zeabur.app** (link goes live after deploy; placeholder until Zeabur app is installed)
+**https://sec-10k-extractor-kevin.zeabur.app**
 
 The web UI offers:
 
