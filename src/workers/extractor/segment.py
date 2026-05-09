@@ -21,8 +21,9 @@ from workers.extractor.era import part_for_item
 from workers.extractor.regex_segment import edgartools_coverage_suspect, regex_segment
 
 
-# section_key like "part_i_item_1a" -> ("1", "1A") with proper canonicalization
-_PART_RX = re.compile(r"part_(?P<part>i{1,4})_item_(?P<item>\d+[a-z]?)", re.IGNORECASE)
+# section_key like "part_i_item_1a" -> ("1", "1A") with proper canonicalization.
+# `i{1,4}` would silently miss `iv`; enumerate the four valid Part numerals.
+_PART_RX = re.compile(r"part_(?P<part>i|ii|iii|iv)_item_(?P<item>\d+[a-z]?)", re.IGNORECASE)
 _ROMAN = {"i": 1, "ii": 2, "iii": 3, "iv": 4}
 
 
@@ -96,7 +97,7 @@ def segment_with_edgartools(filing: Filing) -> dict[str, Any]:
         })
         seen_item_nums.add(item_num)
 
-    is_abs = _looks_like_abs(items, filing)
+    is_abs = _looks_like_abs(raw_text)
 
     # Path 3: regex fallback when edgartools' coverage looks broken.
     # Triggers on filings like GE 2021 (cross-ref TOC) where edgartools yields
@@ -210,23 +211,22 @@ _RE_REG_AB_ITEM = re.compile(
 )
 
 
-def _looks_like_abs(items: list[dict[str, Any]], filing: Filing) -> bool:
+def _looks_like_abs(raw_text: str) -> bool:
     """Detect Asset-Backed Securities 10-K (Reg AB schema).
 
-    Requires *positive* evidence: any of
-      - "regulation ab" / "asset-backed" / "asset backed" anywhere in the first
-        20K chars (some ABS filings put the boilerplate Item 1-9C cover-page
-        section before the Reg AB declaration)
-      - "Item 11XX of Regulation AB" pattern (Reg AB defines its own item
-        numbers in the 1100-1123 range — a very specific positive signal)
+    Requires *positive Reg-AB-specific evidence*. We deliberately do NOT
+    trigger on plain "asset-backed" / "asset backed" because every major
+    bank, credit-card lender, and asset manager mentions those phrases in
+    Item 1 Business prose — a JPM/BofA/Goldman 10-K would be misclassified
+    as ABS and return a single non_standard placeholder.
 
-    Does NOT trigger on empty edgartools results — those are handled by the
-    regex_segment fallback in the caller. Pre-XBRL 10-Ks (form 10-K405) and
-    cross-reference TOC filings (GE 2021) yield no edgartools items but are
-    NOT ABS filings.
+    Trigger on either:
+      - "regulation ab" anywhere in the first 20K chars (Reg AB filings
+        explicitly reference their own regulation in cover/Item 1)
+      - "Item 11XX of Regulation AB" (Reg AB defines item numbers in the
+        1100-1123 range — a very specific positive signal)
     """
-    raw = _resolve(filing, "text") or ""
-    text_l = raw[:20000].lower()
-    if "regulation ab" in text_l or "asset-backed" in text_l or "asset backed" in text_l:
+    text_l = raw_text[:20000].lower()
+    if "regulation ab" in text_l:
         return True
     return bool(_RE_REG_AB_ITEM.search(text_l))
