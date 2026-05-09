@@ -2,7 +2,19 @@
 
 Item-level structured extraction from SEC 10-K filings. Hybrid pipeline: deterministic rules first (free, fast), LLM augmentation only on edge cases, XBRL Company Facts cross-validation as a third sanity layer. Public Zeabur demo + library + CLI.
 
-> Origin: AI Coding Test 2026, interview deliverable. Task 3 of three. Designed to be the depth-anchor of the submission.
+## Live demo
+
+**https://sec-10k-extractor-kevin.zeabur.app**
+
+The web UI offers:
+
+- 10 quick-pick demo filings (3 gold + 7 silver) served from a pre-built cache. Zero cost, zero latency, zero SEC traffic.
+- One-click sample chips (Costco / Starbucks / Nike / Domino's, all not in the cache) that fill the form so reviewers don't need to look up an accession on EDGAR.
+- A free-form CIK + accession input that runs Phase 1 + XBRL live (rate-limited to 6 req/min/IP) with a staged progress indicator + elapsed timer; backend is sync so stages are heuristic, but they mirror the real `extract_10k()` phases.
+
+Status badges colour-code the 6 outcomes so the cost of conflating them shows up visually.
+
+---
 
 ## What this does
 
@@ -40,17 +52,6 @@ Phase 3: XBRL CROSS-VALIDATION (free)
 ```
 
 Phase 1 hits 1.000 status accuracy on the 3-filing hand-validated gold set. 95%+ of items in modern filings resolve in Phase 1 alone.
-
-## Live demo
-
-**https://sec-10k-extractor-kevin.zeabur.app**
-
-The web UI offers:
-
-- 10 quick-pick demo filings (3 gold + 7 silver) served from a pre-built cache. Zero cost, zero latency, zero SEC traffic.
-- A free-form CIK + accession input that runs Phase 1 + XBRL live (rate-limited to 6 req/min/IP).
-
-Status badges colour-code the 6 outcomes so the cost of conflating them shows up visually.
 
 ## HTTP API
 
