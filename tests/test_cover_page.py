@@ -10,9 +10,9 @@ annual meeting of shareholders are incorporated by reference into Part III of
 this Annual Report on Form 10-K where indicated."""
     out = detect_cover_incorporates(text)
     assert out is not None
-    assert out["target_form"] == "DEF 14A"
-    assert out["expected_year"] == 2025
-    assert out["resolved_accession"] is None  # filled by later resolver
+    assert out.target_form == "DEF 14A"
+    assert out.expected_year == 2025
+    assert out.resolved_accession is None  # filled by later resolver
 
 
 def test_no_cover_block_returns_none():
@@ -28,4 +28,13 @@ def test_lowercase_block_header_still_matches():
     text = "documents incorporated by reference\nPortions of the 2024 proxy statement..."
     out = detect_cover_incorporates(text)
     assert out is not None
-    assert out["expected_year"] == 2024
+    assert out.expected_year == 2024
+
+
+def test_year_regex_rejects_securities_act_1933():
+    text = """DOCUMENTS INCORPORATED BY REFERENCE
+Registered under the Securities Act of 1933 in connection with the
+2025 annual meeting of shareholders..."""
+    out = detect_cover_incorporates(text)
+    assert out is not None
+    assert out.expected_year == 2025  # not 1933

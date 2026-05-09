@@ -240,13 +240,14 @@ def validate_filing(
             ],
         )
 
-    # Find Item 8
     item_8 = next((it for it in extraction.items if it.item_number == "8"), None)
-    item_8_status = item_8.status if item_8 else "missing"
+    item_8_status = item_8.status if item_8 else None
     item_8_text = item_8.content_text if item_8 else ""
     warnings: list[str] = []
 
-    # Signal B — status vs. count consistency
+    # Signal B — status vs. count consistency. Threshold values: <20 facts is
+    # "barely scaffolded"; >50 with by-ref status implies the body is actually
+    # inline despite the label. Calibrated against the silver-set baselines.
     status_consistent = True
     if item_8_status == "extracted" and total_facts < 20:
         status_consistent = False
@@ -295,7 +296,8 @@ def validate_filing(
             match_form=match_form,
         ))
 
-    # If Item 8 is by-reference, missing reconciliations are expected — don't warn.
+    # If Item 8 is by-reference (or absent), missing reconciliations are
+    # expected — don't warn.
     if item_8_status == "extracted" and reconciliations:
         misses = [r for r in reconciliations if not r.found_in_item8]
         if misses:

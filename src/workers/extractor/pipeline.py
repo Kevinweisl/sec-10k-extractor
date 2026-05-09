@@ -29,7 +29,6 @@ from workers.extractor.schema import (
     ExtractionResult,
     FilingMeta,
     Item,
-    ReferencedFiling,
 )
 from workers.extractor.segment import segment_with_edgartools
 from workers.extractor.xbrl_check import fetch_company_facts, validate_filing
@@ -89,13 +88,13 @@ def extract_10k(
     t0 = time.perf_counter()
     filing = find_10k_filing(cik, accession)
 
-    # Build filing-level metadata
     primary_doc = ""
     try:
-        # primary_documents is a Rich-rendered list-like; use document fallback
         primary_doc = filing.document.document if filing.document else ""
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as exc:  # noqa: BLE001
+        # primary_doc lookup is best-effort; warn rather than crash if
+        # edgartools' document accessor changes shape.
+        print(f"[pipeline] warning: primary_doc lookup failed ({type(exc).__name__})")
 
     filing_date = _parse_iso_date(filing.filing_date)
     period_ending = _parse_iso_date(filing.period_of_report)
@@ -106,9 +105,7 @@ def extract_10k(
     raw_html: str = seg["raw_html"]
     is_abs: bool = seg["is_abs_filing"]
 
-    # Cover page
-    cover_meta = detect_cover_incorporates(raw_text)
-    cover_ref = ReferencedFiling(**cover_meta) if cover_meta else None
+    cover_ref = detect_cover_incorporates(raw_text)
 
     # What items are applicable in this filing's era?
     applicable = set(items_applicable(filing_date, period_ending))
@@ -124,31 +121,23 @@ def extract_10k(
             applicable_in_era=False,
         ))
     else:
-        # Sequential alignment: 10-K items appear in document order
-        # (Part I items 1..1C, 2..4 → Part II 5..9C → Part III 10..14 → Part IV 15..16),
-        # so we sort segments by (part, item_number) and thread a cursor that
-        # only moves forward. This fixes by-ref boilerplate collisions (Items 11-14
-        # all share near-identical text and a naive matcher resolves them to one offset).
+        # Sort by (part, item_number) and thread a forward-only cursor so that
+        # by-ref boilerplate collisions (Items 11-14 share near-identical text)
+        # don't all resolve to the same offset.
         sorted_segs = sorted(seg["items"], key=_item_sort_key)
         text_cursor = 0
         html_cursor = 0
         for raw in sorted_segs:
             content_text: str = raw["content_text"]
-            # Cross-ref TOC parser provides a status_hint that's more reliable
-            # than rule-based classification on the bare TOC entry text.
             hint = raw.get("status_hint")
             status = hint if hint else classify_status(content_text)
-            ref: ReferencedFiling | None = None
-            if status in ("incorporated_by_reference", "partial") and cover_ref:
-                # All by-ref items in a typical 10-K reference the same proxy
-                ref = ReferencedFiling(**cover_meta) if cover_meta else None
+            ref = cover_ref if status in ("incorporated_by_reference", "partial") else None
 
             text_range = align_to_source(content_text, raw_text, min_start=text_cursor)
             html_range = align_to_source(content_text, raw_html, min_start=html_cursor) if raw_html else None
 
-            # Advance cursors to enforce sequential ordering. Only advance on
-            # successful match — failed matches leave cursor where it was so
-            # the next item retries from the same baseline.
+            # Only advance cursor on successful match — failed matches leave
+            # cursor where it was so the next item retries from the same baseline.
             if text_range is not None:
                 text_cursor = text_range[1]
             if html_range is not None:
@@ -255,9 +244,12 @@ def _run_llm_augmentation(items: list[Item]) -> tuple[list[Item], list[str]]:
 
     try:
         results = asyncio.run(run_all())
-    except RuntimeError:
-        # Already inside an event loop (e.g. inside an async test); skip
-        # rather than failing the whole extraction.
+    except RuntimeError as exc:
+        # Re-raise unless this is the specific "asyncio.run from inside a
+        # running loop" case — silently swallowing every RuntimeError would
+        # hide real LLM-vote bugs as if they were event-loop conflicts.
+        if "running event loop" not in str(exc):
+            raise
         return items, ["LLM augmentation skipped: running event loop already active"]
 
     warnings: list[str] = []

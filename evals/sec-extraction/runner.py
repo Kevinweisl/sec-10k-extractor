@@ -34,7 +34,6 @@ try:
 except ImportError:
     pass
 
-from workers.extractor.iou import compute_iou, mean_iou  # noqa: E402
 from workers.extractor.pipeline import extract_10k  # noqa: E402
 
 
@@ -86,17 +85,9 @@ def score_filing(actual, gold: dict) -> dict:
     full_tp = len(expected_set & actual_set)
     full_match_rate = full_tp / len(expected_set) if expected_set else 0.0
 
-    # Mean char-IoU vs. self (we don't have hand-annotated gold ranges yet —
-    # this measures alignment self-consistency: text vs html ranges should overlap
-    # in normalized space). Reported for trend tracking.
-    text_html_iou_pairs = []
-    for it in actual_items:
-        if it.char_range_text and it.char_range_html:
-            # Can't IoU directly across different sources, but report ratio of
-            # text-aligned to html-aligned items.
-            text_html_iou_pairs.append((it.char_range_text, it.char_range_text))  # placeholder
-
-    # Coverage of char ranges
+    # Coverage of char ranges (we don't have hand-annotated gold ranges yet,
+    # so we report alignment-rate-vs-actual-items as a self-consistency proxy
+    # rather than IoU vs gold).
     text_aligned = sum(1 for it in actual_items if it.char_range_text)
     html_aligned = sum(1 for it in actual_items if it.char_range_html)
     text_align_rate = text_aligned / len(actual_items) if actual_items else 0.0

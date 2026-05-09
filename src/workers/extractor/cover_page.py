@@ -15,27 +15,23 @@ from __future__ import annotations
 
 import re
 
-# Look for "DOCUMENTS INCORPORATED BY REFERENCE" header followed (within a window) by
-# a 4-digit year + "annual meeting" or "proxy statement"
+from workers.extractor.schema import ReferencedFiling
+
+# Year regex restricted to plausible filing-cycle range. Plain `\d{4}` would
+# match "Securities Act of 1933" or stray IDs ahead of the actual year.
 _RE_BLOCK = re.compile(
     r"DOCUMENTS\s+INCORPORATED\s+BY\s+REFERENCE\b.{0,2000}?"
-    r"(\d{4})\s+(?:annual\s+meeting|proxy\s+statement|definitive\s+proxy)",
+    r"(?P<year>19[89]\d|20\d{2})\s+(?:annual\s+meeting|proxy\s+statement|definitive\s+proxy)",
     re.IGNORECASE | re.DOTALL,
 )
 
 
-def detect_cover_incorporates(text: str) -> dict | None:
-    """Return {target_form, expected_year, ...} or None if not found.
-
-    Result schema matches schema.ReferencedFiling.
-    """
+def detect_cover_incorporates(text: str) -> ReferencedFiling | None:
+    """Return a ReferencedFiling for the cover-page proxy reference, or None."""
     m = _RE_BLOCK.search(text)
     if not m:
         return None
-    year = int(m.group(1))
-    return {
-        "target_form": "DEF 14A",
-        "expected_year": year,
-        "proxy_120_day_window": None,   # filled by caller using filing_date
-        "resolved_accession": None,     # filled later by post-processing
-    }
+    return ReferencedFiling(
+        target_form="DEF 14A",
+        expected_year=int(m.group("year")),
+    )

@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 from typing import get_args
 
@@ -190,9 +191,7 @@ async def augment_status(
 # Either choice surfaces every divergence in the eval output (vote pick,
 # confidence per filing item) so a reviewer can audit individual cases.
 
-import os as _os
-
-_OVERRIDE_THRESHOLD = float(_os.environ.get("LLM_AUG_OVERRIDE_THRESHOLD", "0.51"))
+_OVERRIDE_THRESHOLD = float(os.environ.get("LLM_AUG_OVERRIDE_THRESHOLD", "0.51"))
 
 
 def should_override_phase1(vote: VoteResult, phase1_status: Status) -> bool:
