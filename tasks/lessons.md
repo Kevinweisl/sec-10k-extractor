@@ -1,12 +1,12 @@
 # Lessons captured (project-specific patterns and corrections)
 
 A live document. New lessons go at the bottom dated; never delete past lessons
-even when superseded — append a follow-up note instead. Reading order:
+even when superseded; append a follow-up note instead. Reading order:
 top-down chronologically.
 
 ---
 
-## 2026-04-30 — Day 1 foundation
+## 2026-04-30: Day 1 foundation
 
 ### L1. Postgres-only is enough for this scope
 The original spec called for Inngest + Redis + Postgres. After Day 1 we
@@ -16,7 +16,7 @@ infra when you can name the failure mode it prevents.
 
 ---
 
-## 2026-05-01 — Day 4 LLM ensemble live integration
+## 2026-05-01: Day 4 LLM ensemble live integration
 
 ### L2. Always smoke-test each provider in isolation before voting
 We discovered each NIM provider has quirks (DeepSeek wants
@@ -30,7 +30,7 @@ voting. The wrapper hides failures behind ensemble fallback.
 Reasoning mode (`THINKING_*=on`) adds 2-30× latency. Only worth it for
 high-stakes discrete decisions (Validator). For Trigger eval and Extractor
 augmentation, OFF is right. **Lesson**: don't enable reasoning by default
-"to be safe" — measure first, add later.
+"to be safe"; measure first, add later.
 
 ### L4. Refactor decorators when you see the second copy
 The 429 retry was inline in the LLM client first. When the SEC fetch path
@@ -40,7 +40,7 @@ second use is the rule.
 
 ---
 
-## 2026-05-01 — Day 5 trigger eval framework
+## 2026-05-01: Day 5 trigger eval framework
 
 ### L5. Imperative redirect beats noun-only redirect for sister-skill disambiguation
 Original SKILL.md descriptions said `Do NOT use for: container CVE
@@ -56,14 +56,14 @@ and 60. Trail of Bits and superpowers consistently hit ≤ 9. We landed all 4
 CI/CD descriptions at 4-8. **Lesson**: what the router reads in the first
 30 chars largely determines whether it picks your skill at all.
 
-### L7. Tests should rotate concrete words; don't rely on fixed labels
+### L7. Tests should rotate concrete words: don't rely on fixed labels
 The browser-smoke test originally clicked "More information..." link on
 example.com. The site updated the text to "Learn more". Test failed silently
 because no locator resolved. **Lesson**: concrete-string assertions need a
-plan for upstream drift — either a regex with multiple alternatives or a
+plan for upstream drift; either a regex with multiple alternatives or a
 "page changed" detector that reports differently from "test logic broken".
 
-### L8. NIM provider availability is not stable; treat as transient
+### L8. NIM provider availability is not stable: treat as transient
 DeepSeek's NIM endpoint timed out at 270+ s on 2026-05-01 (smoke test
 proved it's the provider, not us). K=3 ensemble degraded to K=2
 (Nemotron + Mistral) gracefully via `vote_role` config. **Lesson**: ensemble
@@ -72,7 +72,7 @@ Adding/removing providers should be a one-line .env change, no code edits.
 
 ---
 
-## 2026-05-01 — Day 6 Task 2 browser agent
+## 2026-05-01: Day 6 Task 2 browser agent
 
 ### L9. Research delta beats full re-research when first pass is recent
 Day 1 had a comprehensive browser-agent SOTA research summary. By Day 6 it
@@ -84,7 +84,7 @@ when the prior research is < 1 week old, ask "what changed?", not "what's
 the SOTA?".
 
 ### L10. Shift work AWAY from per-step LLM calls
-The original design called for "Actor (Claude Sonnet)" — LLM in every step.
+The original design called for "Actor (Claude Sonnet)"; LLM in every step.
 The Day 6 implementation moved LLM out of the Actor entirely: Planner emits
 structured Steps with `selector_hints`; Actor is deterministic Playwright +
 LocatorResolver; Validator (LLM K=2) judges outcomes. Saves ~80% of LLM
@@ -114,12 +114,12 @@ covers the rest.
 
 ---
 
-## 2026-05-01 — Day 6 second iteration (browser eval 6/10 → 10/10)
+## 2026-05-01: Day 6 second iteration (browser eval 6/10 → 10/10)
 
 ### L13. K=2 unanimous-only beats K=3 majority for validator role
 Empirically measured on browser eval: K=2 (Nemotron + Mistral, both must
 agree on REPLAN) achieves 10/10. Adding Qwen as 3rd validator with 2/3
-threshold dropped to 4/10 — the third vote correlated enough with one of
+threshold dropped to 4/10; the third vote correlated enough with one of
 the others that K=3 over-replans on borderline anchor clicks. **Lesson**:
 more LLMs is not strictly better. For PASS/FAIL judgment with high false-
 positive cost, K=2 unanimous (any single REPLAN → consensus REPLAN) gates
@@ -128,7 +128,7 @@ ties (trigger eval, extractor aug).
 
 ### L14. Recognize when the browser is the wrong primitive
 SEC EDGAR (`sec.gov`, `data.sec.gov`, `efts.sec.gov`) blocks Playwright via
-JA3/TLS fingerprinting **regardless** of the User-Agent header — the same
+JA3/TLS fingerprinting **regardless** of the User-Agent header; the same
 UA in `httpx` works fine because it negotiates a different TLS handshake.
 Fix: detect SEC hosts in `actor._navigate`, fetch via httpx, then
 `page.set_content()` the HTML so locator + extract see a uniform Playwright
@@ -140,7 +140,7 @@ fingerprint when the official REST contract works.
 Browser eval went 6/10 → 4/10 → 3/10 → 7/10 → 7/10 → 9/10 → **10/10** over
 7 commits. Each commit had a single logical change AND a measured delta vs
 the prior run. The 4/10 and 3/10 dips were what surfaced L13 (K=2 over K=3)
-and the `.first()` regression — without measuring the regression, we'd have
+and the `.first()` regression; without measuring the regression, we'd have
 shipped the wrong fix. **Lesson**: when the user asks for "improve until
 perfect", commit per-iteration with the eval delta in the commit message;
 regressions are how you find the next lesson. Web-research the failure

@@ -79,6 +79,6 @@ def test_mean_iou_mixed():
 def test_mean_iou_with_nones():
     pairs = [
         ((0, 100), (0, 100)),     # 1.0
-        (None, (0, 100)),         # 0.0  — counts as miss
+        (None, (0, 100)),         # 0.0 ; counts as miss
     ]
     assert mean_iou(pairs) == 0.5

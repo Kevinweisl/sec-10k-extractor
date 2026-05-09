@@ -1,4 +1,4 @@
-"""Regex-based fallback segmenter — used when edgartools mis-segments a 10-K.
+"""Regex-based fallback segmenter; used when edgartools mis-segments a 10-K.
 
 edgartools is right ~95% of the time on modern 10-Ks but fails on filings with
 unusual TOC structures (e.g. GE 2021 cross-ref TOC) or pre-iXBRL eras (e.g.
@@ -7,7 +7,7 @@ the plain text:
 
   1. Find every "Item N(letter)." heading at line start.
   2. Filter out TOC matches by requiring the heading to be followed by enough
-     content (≥200 chars before the next heading) — a TOC entry typically has
+     content (≥200 chars before the next heading); a TOC entry typically has
      the title and then jumps straight to the next entry.
   3. Slice text between consecutive headings.
   4. Map each item_number to its part via era.part_for_item.
@@ -38,18 +38,18 @@ _RE_ITEM_HEADING = re.compile(
 _MIN_BODY_CHARS = 200
 
 
-# Title-based heading detection — fallback for filings like GE 2021 where the
+# Title-based heading detection; fallback for filings like GE 2021 where the
 # body uses ALL-CAPS section titles (e.g. "RISK FACTORS.") and the "Item N."
 # labels only appear in a cross-reference TOC at the document end.
 #
 # These titles are stable across registrants per the SEC's standard 10-K form.
 # Each entry: (regex pattern matching the heading, item_number). Patterns are
 # anchored to line start. Each pattern requires the title be followed by a
-# terminator (`.`, `:`, dash) plus whitespace OR end-of-line — distinguishes a
+# terminator (`.`, `:`, dash) plus whitespace OR end-of-line; distinguishes a
 # heading from prose mentioning the same words. Case-insensitive at compile time.
 _TITLE_TERM = r"(?:[\.\:\-—][ \t\xa0]+|[ \t\xa0]*$)"
 _TITLE_HEADINGS: tuple[tuple[str, str], ...] = (
-    # Part I — order matters where prefixes overlap
+    # Part I; order matters where prefixes overlap
     (r"^[ \t\xa0]{0,3}BUSINESS" + _TITLE_TERM, "1"),
     (r"^[ \t\xa0]{0,3}RISK[ \t\xa0]+FACTORS" + _TITLE_TERM, "1A"),
     (r"^[ \t\xa0]{0,3}UNRESOLVED[ \t\xa0]+STAFF[ \t\xa0]+COMMENTS" + _TITLE_TERM, "1B"),
@@ -91,15 +91,15 @@ def regex_segment(raw_text: str) -> list[dict[str, Any]]:
     list if no headings found (e.g. binary or non-text input).
 
     Strategy:
-      1. Try "Item N." headings first — works for typical 10-Ks.
-      2. If that yields < 8 items (or 0), try title-based headings — recovers
+      1. Try "Item N." headings first; works for typical 10-Ks.
+      2. If that yields < 8 items (or 0), try title-based headings; recovers
          filings like GE 2021 where the body uses ALL-CAPS section titles and
          "Item N." appears only in a cross-reference TOC at the document end.
     """
     if not raw_text:
         return []
 
-    # Cross-reference TOC filings (e.g. GE 2021) — when a "CROSS REFERENCE
+    # Cross-reference TOC filings (e.g. GE 2021); when a "CROSS REFERENCE
     # INDEX" header is present, prefer the TOC parser over heading detection.
     # The TOC is the only place the filing canonically declares each item's
     # status (page-range / Not applicable / by-reference footnote), so we lose
@@ -145,7 +145,7 @@ def _segment_by_item_headings(raw_text: str) -> list[dict[str, Any]]:
     if not headings:
         return []
 
-    # All heading positions (sorted) — used to compute "distance to next heading"
+    # All heading positions (sorted); used to compute "distance to next heading"
     all_starts = sorted(m.start() for m in headings)
 
     # Group by item_number
@@ -190,7 +190,7 @@ def _distance_to_next_heading(m: "re.Match[str]", all_starts: list[int]) -> int:
     for s in all_starts:
         if s > pos:
             return s - pos
-    return 10**9  # last heading — effectively infinite room
+    return 10**9  # last heading; effectively infinite room
 
 
 def _segment_by_titles(raw_text: str) -> list[dict[str, Any]]:
@@ -228,7 +228,7 @@ def _segment_by_titles(raw_text: str) -> list[dict[str, Any]]:
             if start - prev_start < _MIN_BODY_CHARS:
                 deduped[prev_idx] = entry
                 continue
-            # Far apart — both could be valid; take the later one
+            # Far apart; both could be valid; take the later one
             deduped[prev_idx] = entry
             continue
         deduped.append(entry)
@@ -288,7 +288,7 @@ def cross_reference_toc_segment(raw_text: str) -> list[dict[str, Any]] | None:
             continue
         seen.add(item_num)
         line = m.group(2).strip()
-        # Split "Title  PageRef" — typically separated by 2+ spaces
+        # Split "Title  PageRef"; typically separated by 2+ spaces
         title, page_ref = _split_toc_line(line)
         status_hint = _classify_toc_page_ref(page_ref)
         items.append({
@@ -324,7 +324,7 @@ def _classify_toc_page_ref(page_ref: str) -> str:
     s = page_ref.strip().lower()
     if "not applicable" in s or s == "none" or s == "n/a":
         return "not_applicable"
-    # "(a)", "(b)", "(c)" — footnote letters typically refer to proxy by-ref
+    # "(a)", "(b)", "(c)"; footnote letters typically refer to proxy by-ref
     if re.fullmatch(r"\([a-z]\)(?:[, ]+\d+)*", s):
         return "incorporated_by_reference"
     # any digits → page reference, body content exists
@@ -337,7 +337,7 @@ def edgartools_coverage_suspect(items: list[dict[str, Any]]) -> bool:
     """Heuristic: should we fall back to regex segmentation?
 
     Triggers when:
-      - very few items (< 8 — a normal 10-K has at least 14 standard items)
+      - very few items (< 8; a normal 10-K has at least 14 standard items)
       - duplicate content across different item_numbers
         (edgartools' GE 2021 mode where Item 1 and Item 1A share text)
     """

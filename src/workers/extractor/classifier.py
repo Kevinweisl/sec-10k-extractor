@@ -21,7 +21,7 @@ import re
 
 # 'Item 6. [Reserved]' since 2021 (after Selected Financial Data was deleted).
 # Only match when [Reserved] is the actual content, not a stray bleed-over from a
-# neighboring item — handled by checking the body head only.
+# neighboring item; handled by checking the body head only.
 _RE_RESERVED_HEAD = re.compile(r"\[\s*reserved\s*\]", re.IGNORECASE)
 
 # 'Not applicable' / 'None' as the whole item body (allow trailing footer noise).
@@ -35,7 +35,7 @@ _RE_ITEM_HEADER = re.compile(
     r"^\s*item\s+\d+[A-C]?\.?[\s\xa0]*[^\n]*?\n",
     re.IGNORECASE,
 )
-# fallback: header on a single line (no newline) — strip up to first 2+ spaces
+# fallback: header on a single line (no newline); strip up to first 2+ spaces
 _RE_ITEM_HEADER_INLINE = re.compile(
     r"^\s*item\s+\d+[A-C]?\.?[\s\xa0]+[^\s][^\n]{0,120}?[\s\xa0]{2,}",
     re.IGNORECASE,
@@ -74,14 +74,14 @@ _RE_NEGATIVE_WEBSITE = re.compile(
     re.IGNORECASE,
 )
 
-# A loose marker — "see X" that probably indicates by-reference even without the canonical phrase.
+# A loose marker; "see X" that probably indicates by-reference even without the canonical phrase.
 _RE_LOOSE_SEE = re.compile(
     r"^\s*see\s+(?:our\s+|the\s+)?[\d\s]*[Pp]roxy\s+[Ss]tatement",
     re.IGNORECASE | re.MULTILINE,
 )
 
 # 'The remaining information required by this Item' / 'additional information'
-# / 'other information required' — these clauses signal mixed inline + by-ref.
+# / 'other information required'; these clauses signal mixed inline + by-ref.
 _RE_REMAINING_INFO = re.compile(
     r"\b(?:remaining|additional|other)\s+information\s+(?:required\s+|called\s+for\s+)?by\s+this\s+[Ii]tem",
     re.IGNORECASE,
@@ -93,7 +93,7 @@ def _strip_trailing_footer(text: str) -> str:
     return _RE_TRAILING_FOOTER.sub("", text).rstrip()
 
 
-# strip just the 'Item N.' prefix, NOT the title — to keep '[Reserved]' / 'None'
+# strip just the 'Item N.' prefix, NOT the title; to keep '[Reserved]' / 'None'
 # visible when they sit on the same line as the title. Footnote: edgartools uses
 # non-breaking spaces (\xa0) which we normalize to ASCII space first.
 _RE_ITEM_PREFIX = re.compile(r"^\s*item\s+\d+[A-C]?\.?\s*", re.IGNORECASE)
@@ -130,7 +130,7 @@ def classify_status(text: str) -> str:
     if short and _RE_RESERVED_HEAD.search(body_after_prefix):
         return "reserved"
 
-    # 2. Not applicable / None — accept if body is short and ENDS with the pattern
+    # 2. Not applicable / None; accept if body is short and ENDS with the pattern
     if len(body_after_prefix) < 250:
         # remove leading non-applicable text that might be a title remnant, then
         # check if what remains is the not_applicable phrase.
@@ -155,7 +155,7 @@ def classify_status(text: str) -> str:
         neg_match = _RE_NEGATIVE_WEBSITE.search(text)
         if not _is_only_negative(inc_matches[0], neg_match):
             # 'remaining' / 'additional' / 'other' information clauses signal there
-            # IS substantive content in this same item — strong partial indicator.
+            # IS substantive content in this same item; strong partial indicator.
             # E.g. Apple 2024 Item 10's "The remaining information required by this
             # Item will be included in the ... Proxy Statement" after a substantive
             # insider-trading-policy paragraph.
@@ -187,7 +187,7 @@ def _is_whole_item_by_reference(text: str, inc_matches: list[re.Match[str]]) -> 
     side-note in an otherwise substantive section?
 
     True when:
-      (a) the body is very short (<400 chars) — typical pure by-ref item like
+      (a) the body is very short (<400 chars); typical pure by-ref item like
           'Item 12. Security Ownership ... incorporated herein by reference.'
       (b) OR the matched clause spans >30% of the body (density threshold)
     Items longer than 400 chars with a by-ref clause that's only a side-note

@@ -1,4 +1,4 @@
-"""SEC 10-K Item Extractor — FastAPI app for the public Zeabur demo.
+"""SEC 10-K Item Extractor: FastAPI app for the public Zeabur demo.
 
 Endpoints:
 
@@ -45,7 +45,7 @@ EXTRACT_RPM = int(os.environ.get("EXTRACT_RPM", "6"))
 # Hard ceiling on a single live extraction. SEC fetch + XBRL + parsing for a
 # Berkshire-class filing took ~3 minutes in our silver eval; cap so a hung
 # request never holds a worker hostage. The timer also covers queue time, so
-# under concurrent load slow requests can 504 before they get a worker —
+# under concurrent load slow requests can 504 before they get a worker;
 # documented in the 504 message body.
 EXTRACT_TIMEOUT_S = int(os.environ.get("EXTRACT_TIMEOUT_S", "60"))
 
@@ -136,7 +136,7 @@ def demo_filings() -> dict:
 def demo_result(slug: str) -> dict:
     """Return the cached extraction result for a demo filing.
 
-    503 (not 404) when the demo cache hasn't been built yet — distinguishes
+    503 (not 404) when the demo cache hasn't been built yet, to distinguish
     "this slug doesn't exist" (404) from "we know about it but cache isn't
     populated" (503).
     """
@@ -147,8 +147,8 @@ def demo_result(slug: str) -> dict:
         raise HTTPException(
             status_code=503,
             detail=(
-                f"demo cache for '{slug}' not yet built — "
-                "run scripts/build_demo_cache.py"
+                f"demo cache for '{slug}' not yet built. "
+                "Run scripts/build_demo_cache.py"
             ),
         )
     return data

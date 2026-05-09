@@ -25,15 +25,15 @@ def test_basic_segmentation():
 
 
 def test_filter_toc_entries():
-    """TOC entries point at body — only the body should remain."""
+    """TOC entries point at body; only the body should remain."""
     text = (
-        # TOC at top — items packed close together
+        # TOC at top; items packed close together
         "TABLE OF CONTENTS\n"
         "Item 1. Business 5\n"
         "Item 1A. Risk Factors 12\n"
         "Item 7. MD&A 30\n"
         "\n\n"
-        # bodies — well-separated
+        # bodies; well-separated
         "Item 1. Business\n"
         + ("Business actual content. " * 30)
         + "\n\nItem 1A. Risk Factors\n"
@@ -97,7 +97,7 @@ def test_coverage_suspect_normal():
 
 
 def test_coverage_suspect_duplicate_content():
-    """The GE 2021 failure mode — multiple items share content."""
+    """The GE 2021 failure mode; multiple items share content."""
     same = "RISK FACTORS. " + ("identical text " * 50)
     items = [
         {"item_number": "1", "content_text": same},

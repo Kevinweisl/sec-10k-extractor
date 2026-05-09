@@ -82,7 +82,7 @@ def extract_10k(
       xbrl_validate: fetch and cross-check SEC XBRL Company Facts (default on,
         adds one network call per filing).
       enable_llm_aug: run Phase 2 LLM ensemble vote on items where Phase 1
-        looks uncertain. Default off — keeps the deterministic path and the
+        looks uncertain. Default off; keeps the deterministic path and the
         existing eval baseline. Turn on per-run via the eval runner flag.
     """
     t0 = time.perf_counter()
@@ -115,7 +115,7 @@ def extract_10k(
         # Single placeholder record marking this isn't a standard 10-K
         items.append(Item(
             part=0, item_number="abs",
-            item_title="Asset-Backed Securities (Reg AB) filing — non-standard schema",
+            item_title="Asset-Backed Securities (Reg AB) filing; non-standard schema",
             status="non_standard",
             content_text="",
             applicable_in_era=False,
@@ -136,7 +136,7 @@ def extract_10k(
             text_range = align_to_source(content_text, raw_text, min_start=text_cursor)
             html_range = align_to_source(content_text, raw_html, min_start=html_cursor) if raw_html else None
 
-            # Only advance cursor on successful match — failed matches leave
+            # Only advance cursor on successful match; failed matches leave
             # cursor where it was so the next item retries from the same baseline.
             if text_range is not None:
                 text_cursor = text_range[1]
@@ -181,7 +181,7 @@ def extract_10k(
         is_abs_filing=is_abs,
         cover_page_incorporates=cover_ref,
     )
-    # Phase 2 — LLM augmentation (synchronous wrapper around async vote)
+    # Phase 2; LLM augmentation (synchronous wrapper around async vote)
     aug_warnings: list[str] = []
     if enable_llm_aug and not is_abs:
         items, aug_warnings = _run_llm_augmentation(items)
@@ -195,7 +195,7 @@ def extract_10k(
         ),
     )
 
-    # Phase 3 — XBRL Company Facts cross-validation
+    # Phase 3; XBRL Company Facts cross-validation
     if xbrl_validate and not is_abs:
         cf = fetch_company_facts(cik)
         result.xbrl_validation = validate_filing(result, cf)
@@ -207,7 +207,7 @@ def _run_llm_augmentation(items: list[Item]) -> tuple[list[Item], list[str]]:
     """For each item that triggers should_augment_status, run the K-vote
     ensemble and apply the override if confidence is high enough.
 
-    Sync wrapper — uses asyncio.run on a fresh event loop, so this can be
+    Sync wrapper; uses asyncio.run on a fresh event loop, so this can be
     called from sync code paths. For high-throughput batch jobs the eval
     runner can do its own async fan-out instead.
     """
@@ -246,7 +246,7 @@ def _run_llm_augmentation(items: list[Item]) -> tuple[list[Item], list[str]]:
         results = asyncio.run(run_all())
     except RuntimeError as exc:
         # Re-raise unless this is the specific "asyncio.run from inside a
-        # running loop" case — silently swallowing every RuntimeError would
+        # running loop" case; silently swallowing every RuntimeError would
         # hide real LLM-vote bugs as if they were event-loop conflicts.
         if "running event loop" not in str(exc):
             raise

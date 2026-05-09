@@ -6,7 +6,7 @@ enable_llm_aug=False)` and dump:
   - `ui/demo_cache/manifest.json` (the metadata listing served by /demo/filings)
 
 This script is the ONLY path that triggers SEC fetches at build time. The
-running web server never touches SEC EDGAR for cache hits — that's the whole
+running web server never touches SEC EDGAR for cache hits; that's the whole
 point of pre-rendering.
 
 Usage:

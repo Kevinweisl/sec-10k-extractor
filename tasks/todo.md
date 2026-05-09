@@ -1,4 +1,4 @@
-# Task 3 — Zeabur Deploy Plan (Option C: API + UI + cached demo filings)
+# Task 3: Zeabur Deploy Plan (Option C: API + UI + cached demo filings)
 
 Date: 2026-05-08
 Goal: 在 Zeabur 部署 `sec-10k-extractor` 為公開可用的 API + 視覺化 demo，符合題目「在 Zeabur 部署為 API」要求。
@@ -41,25 +41,25 @@ Out of scope:
 
 ## Phases (順序執行)
 
-### Phase A — HTTP API skeleton ✓ DONE 2026-05-08
+### Phase A: HTTP API skeleton ✓ DONE 2026-05-08
 - [x] `src/api/__init__.py`
-- [x] `src/api/main.py` — FastAPI app, 4 endpoints + CORS + lifespan + sanitised errors
-- [x] `src/api/cache.py` — list_filings derives 10 entries from gold + silver_filings.json source files (manifest at `ui/demo_cache/manifest.json` overrides if present)
-- [x] `src/api/rate_limit.py` — per-IP token bucket, MAX_BUCKETS=4096 LRU eviction
-- [x] `pyproject.toml` — `fastapi>=0.115` + `uvicorn[standard]>=0.32` added
-- [x] `tests/test_api.py` — 12 tests, all pass
+- [x] `src/api/main.py`; FastAPI app, 4 endpoints + CORS + lifespan + sanitised errors
+- [x] `src/api/cache.py`; list_filings derives 10 entries from gold + silver_filings.json source files (manifest at `ui/demo_cache/manifest.json` overrides if present)
+- [x] `src/api/rate_limit.py`; per-IP token bucket, MAX_BUCKETS=4096 LRU eviction
+- [x] `pyproject.toml`; `fastapi>=0.115` + `uvicorn[standard]>=0.32` added
+- [x] `tests/test_api.py`; 12 tests, all pass
 
 #### Phase A review (3 iterations)
 - **Iter 1 issues fixed**: `concurrent.futures.TimeoutError` not aliased to builtin on Py3.10 → tuple catch; lifespan pool shutdown was killing across tests → removed shutdown
 - **Iter 2 issues fixed**: ruff (import order, nested if) → auto-fix; over-engineered `_get_pool()` accessing private `_shutdown` attr → simplified to module-level pool
 - **Iter 3 issues fixed**: RateLimiter unbounded dict growth under unique-IP attack → MAX_BUCKETS=4096 LRU eviction + test
 - **Real-uvicorn smoke**: /health (10 demo filings, UA flag), /demo/filings (gold + silver merged), /demo/result/apple-2024 (503 with action hint), /extract bad cik (400 with sane message). All endpoints behave correctly.
-- **Acceptable trade-offs**: orphan threads on /extract timeout (sync extractor can't be cancelled); pool=2 + 60s cap bounds the blast radius. `@cache` on list_filings means manifest changes need restart — fine since Phase D writes manifest before server start.
+- **Acceptable trade-offs**: orphan threads on /extract timeout (sync extractor can't be cancelled); pool=2 + 60s cap bounds the blast radius. `@cache` on list_filings means manifest changes need restart; fine since Phase D writes manifest before server start.
 
-### Phase B — UI ✓ DONE 2026-05-08
-- [x] `ui/index.html` — header + intro + demos (gold/silver) + live form + result section
-- [x] `ui/styles.css` — colour palette mirrors Task 1; 6 status-badge classes (extracted=green, IBR=yellow, N/A=gray, reserved=gray, partial=orange, non_standard=blue); 640px responsive breakpoint
-- [x] `ui/app.js` — bootstrap fetches /demo/filings, renders 3+7 buttons; demo path + live path; item row click expands content excerpt + char_range; sanitised HTML via escapeHtml everywhere
+### Phase B: UI ✓ DONE 2026-05-08
+- [x] `ui/index.html`; header + intro + demos (gold/silver) + live form + result section
+- [x] `ui/styles.css`; colour palette mirrors Task 1; 6 status-badge classes (extracted=green, IBR=yellow, N/A=gray, reserved=gray, partial=orange, non_standard=blue); 640px responsive breakpoint
+- [x] `ui/app.js`; bootstrap fetches /demo/filings, renders 3+7 buttons; demo path + live path; item row click expands content excerpt + char_range; sanitised HTML via escapeHtml everywhere
 - [x] FastAPI StaticFiles mount already in Phase A main.py
 
 #### Phase B verification (Chrome MCP)
@@ -75,8 +75,8 @@ Out of scope:
 - ABS filing items appear under "Cover / synthetic" part group (item.part=0); semantically ok since the synthetic abs record is filing-level not Item-level
 - `roman(0)` dead code; safe since part=0 always routed to "Cover / synthetic" label
 
-### Phase C — Public demo guardrails ✓ DONE 2026-05-08 (mostly subsumed by Phase A)
-- [x] FastAPI 只暴露 Phase 1（`enable_llm_aug=False` 硬編碼在 `_run_extract`）— verified by source-inspection
+### Phase C: Public demo guardrails ✓ DONE 2026-05-08 (mostly subsumed by Phase A)
+- [x] FastAPI 只暴露 Phase 1（`enable_llm_aug=False` 硬編碼在 `_run_extract`）. verified by source-inspection
 - [x] `SEC_USER_AGENT` 必填，lifespan 啟動 fail-fast；測試模式以 `ALLOW_MISSING_SEC_UA=1` 跳過
 - [x] Per-IP rate limit 6 req/min/IP, 4096 buckets LRU
 - [x] `/extract` 60s timeout (504 + helpful message)
@@ -85,30 +85,30 @@ Out of scope:
 - [x] Error sanitisation: `_short()` truncates exception messages to 240 chars; `from None` suppresses traceback chain
 - [x] `.env.example` documents required + optional vars (added in Phase C wrap-up)
 
-### Phase D — Pre-cache 10 filings ✓ DONE 2026-05-08 (script written, cache build in progress)
-- [x] gold + silver source JSONs are summary-only, NOT full ExtractionResult — must call `extract_10k` for each filing
-- [x] `scripts/build_demo_cache.py` — runs `extract_10k(cik, accession, enable_llm_aug=False)` per filing, dumps to `ui/demo_cache/{slug}.json` + manifest. Stamps `cache_built_at` provenance.
-- [x] cache files git-checked-in (NOT built at container start) — keeps deploy reproducible + avoids 10 SEC fetches per cold-start
+### Phase D: Pre-cache 10 filings ✓ DONE 2026-05-08 (script written, cache build in progress)
+- [x] gold + silver source JSONs are summary-only, NOT full ExtractionResult; must call `extract_10k` for each filing
+- [x] `scripts/build_demo_cache.py`; runs `extract_10k(cik, accession, enable_llm_aug=False)` per filing, dumps to `ui/demo_cache/{slug}.json` + manifest. Stamps `cache_built_at` provenance.
+- [x] cache files git-checked-in (NOT built at container start); keeps deploy reproducible + avoids 10 SEC fetches per cold-start
 - [x] Single-filing smoke (apple-2024): 24 items, XBRL 429 facts, 51 sec
 - [ ] Full 10-filing cache build running in background; berkshire-2026 + intel-2022/2020 expected to take 2-3 min each (memory says 184s for berkshire-2026 in silver eval)
 
-### Phase E — Dockerfile + Zeabur ✓ DONE 2026-05-08 (deploy steps queued for user)
-- [x] `Dockerfile` — python:3.12-slim, copy src + ui + evals (evals needed for cache fallback), pip install -e ., uvicorn CMD
-- [x] `.dockerignore` — excludes .git, prompts, tests, scripts, docs, tasks, .env*
-- [x] `.env.example` — SEC_USER_AGENT (required) + EXTRACT_RPM, EXTRACT_TIMEOUT_S, NIM_* (offline only)
+### Phase E: Dockerfile + Zeabur ✓ DONE 2026-05-08 (deploy steps queued for user)
+- [x] `Dockerfile`; python:3.12-slim, copy src + ui + evals (evals needed for cache fallback), pip install -e ., uvicorn CMD
+- [x] `.dockerignore`; excludes .git, prompts, tests, scripts, docs, tasks, .env*
+- [x] `.env.example`; SEC_USER_AGENT (required) + EXTRACT_RPM, EXTRACT_TIMEOUT_S, NIM_* (offline only)
 - [ ] 本機 docker build 驗證 (running in background)
 - [ ] 推 GitHub (user action: git add + push)
 - [ ] Zeabur GitHub App 安裝 (user action) → auto-deploy
 - [ ] Aliyun Bangkok 服務器 (per memory, already purchased)
 
-### Phase F — README + docs ✓ DONE 2026-05-08
-- [x] README rewritten — sections: What this does / Architecture / Live demo / HTTP API (with curl examples) / Public demo policy (Phase 1 only + guardrails) / Evaluation / Quick start (CLI + server + docker) / Cost & latency / Repo layout
+### Phase F: README + docs ✓ DONE 2026-05-08
+- [x] README rewritten; sections: What this does / Architecture / Live demo / HTTP API (with curl examples) / Public demo policy (Phase 1 only + guardrails) / Evaluation / Quick start (CLI + server + docker) / Cost & latency / Repo layout
 - [x] API contract section: 4 endpoints with curl examples + sanitised-error policy
 - [x] Public demo policy explained: enable_llm_aug=False hardcoded, rate-limit, timeout, validation
-- [x] `prompts/2026-05-08-zeabur-deploy-shape.md` — 3-option decision (API only / API+UI / API+UI+cached) and why C wins on cost discipline + 184s Berkshire reality + status taxonomy visual reinforcement
+- [x] `prompts/2026-05-08-zeabur-deploy-shape.md`; 3-option decision (API only / API+UI / API+UI+cached) and why C wins on cost discipline + 184s Berkshire reality + status taxonomy visual reinforcement
 - [x] Live demo URL placeholder; will fill in after Zeabur deploy
 
-### Phase G — Verify
+### Phase G: Verify
 - [ ] 部署後 prod 端點 200 OK
 - [ ] /demo/filings 回 10 entries
 - [ ] 隨機點 3 個 demo button 結果正確

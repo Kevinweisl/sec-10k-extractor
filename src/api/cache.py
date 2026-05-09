@@ -28,22 +28,22 @@ GOLD_SLUGS = ["apple-2024", "ge-2021", "chemical-banking-1995"]
 # Map slug → human-readable label. Keep in sync with the gold + silver source
 # files; extra slugs fall back to the slug itself.
 _PRETTY_LABELS = {
-    "apple-2024": "Apple Inc. — FY2024",
-    "ge-2021": "General Electric — FY2021",
-    "chemical-banking-1995": "Chemical Banking — FY1995",
-    "berkshire-2026": "Berkshire Hathaway — FY2025",
-    "intel-2022": "Intel — FY2021",
-    "apple-2023": "Apple Inc. — FY2023",
-    "goldman-2024-10ka": "Goldman Sachs — FY2023 (10-K/A)",
+    "apple-2024": "Apple Inc. (FY2024)",
+    "ge-2021": "General Electric (FY2021)",
+    "chemical-banking-1995": "Chemical Banking (FY1995)",
+    "berkshire-2026": "Berkshire Hathaway (FY2025)",
+    "intel-2022": "Intel (FY2021)",
+    "apple-2023": "Apple Inc. (FY2023)",
+    "goldman-2024-10ka": "Goldman Sachs (FY2023, 10-K/A)",
     "john-deere-owner-trust-2024": "John Deere Owner Trust (ABS)",
-    "berkshire-2019": "Berkshire Hathaway — FY2018",
-    "intel-2020": "Intel — FY2019",
+    "berkshire-2019": "Berkshire Hathaway (FY2018)",
+    "intel-2020": "Intel (FY2019)",
 }
 
 _GOLD_NOTES = {
     "apple-2024": "Modern iXBRL filing. Phase 1 hits 100% status accuracy on hand-validated gold spec.",
     "ge-2021": "Modern HTML; cross-reference TOC forces fallback to regex segmenter.",
-    "chemical-banking-1995": "Pre-iXBRL SGML 10-K405 — pure-text era; tests the SGML support path.",
+    "chemical-banking-1995": "Pre-iXBRL SGML 10-K405; pure-text era, tests the SGML support path.",
 }
 
 

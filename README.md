@@ -27,14 +27,14 @@ The `status` field is the load-bearing piece: real 10-Ks have wildly varying con
 Three phases with cost discipline:
 
 ```
-Phase 1 — RULES (free, fast, deterministic)
+Phase 1: RULES (free, fast, deterministic)
   edgartools section parser + regex fallback for cross-reference TOCs.
   ↓ (low confidence on a small subset)
-Phase 2 — LLM augmentation (paid, K-vote ensemble)
+Phase 2: LLM augmentation (paid, K-vote ensemble)
   3 NIM-hosted models vote on status. Off by default; turn on per-run.
   Public Zeabur demo runs Phase 1 only.
   ↓
-Phase 3 — XBRL CROSS-VALIDATION (free)
+Phase 3: XBRL CROSS-VALIDATION (free)
   Cross-reference XBRL Company Facts API to verify cover-page metadata,
   fiscal-year alignment, and Item 8 numeric reconciliation.
 ```

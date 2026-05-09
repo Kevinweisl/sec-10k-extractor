@@ -66,7 +66,7 @@ def test_role_providers_single(env_three_providers, monkeypatch):
 
 
 def test_role_providers_skips_unconfigured(env_three_providers, monkeypatch):
-    """Models listed but not in env shouldn't crash — just skipped."""
+    """Models listed but not in env shouldn't crash; just skipped."""
     monkeypatch.setenv("VALIDATOR_MODELS", "deepseek,does-not-exist,mistral")
     providers = _role_providers("validator")
     assert [p.name for p in providers] == ["deepseek", "mistral"]
@@ -214,7 +214,7 @@ async def test_call_role_uses_first_provider(env_three_providers, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_vote_runs_in_parallel(env_three_providers, monkeypatch):
-    """All three calls dispatched together — total time ≈ slowest call,
+    """All three calls dispatched together; total time ≈ slowest call,
     not sum of all three."""
     monkeypatch.setenv("VALIDATOR_MODELS", "deepseek,nemotron,mistral")
 

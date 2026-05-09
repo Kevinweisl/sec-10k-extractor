@@ -1,4 +1,4 @@
-"""Char-range IoU (Intersection over Union) — the eval metric for alignment quality.
+"""Char-range IoU (Intersection over Union); the eval metric for alignment quality.
 
 Used by the eval runner (D3-8) to compare predicted char_range_text against
 gold-annotated ranges. IoU=1.0 means perfect overlap; IoU=0.0 means no overlap.

@@ -40,7 +40,7 @@ from workers.extractor.xbrl_check import (
 )
 
 
-# --- _value_appears_in_text — the trickiest part ---
+# --- _value_appears_in_text; the trickiest part ---
 
 def test_value_exact_with_separators():
     assert _value_appears_in_text(391035, "Revenue was $391,035 million") == "exact"
@@ -72,7 +72,7 @@ def test_value_zero_returns_none():
 
 
 def test_value_negative_loss():
-    # losses (negative) — the absolute value is what appears in text
+    # losses (negative); the absolute value is what appears in text
     text = "We recorded a net loss of $1.2 billion."
     assert _value_appears_in_text(-1_200_000_000, text) == "billions"
 
@@ -141,7 +141,7 @@ def test_facts_for_accession_excludes_other():
     assert out == {}
 
 
-# --- validate_filing — full report assembly ---
+# --- validate_filing; full report assembly ---
 
 def _build_extraction(item_8_status: str, item_8_text: str) -> ExtractionResult:
     return ExtractionResult(
@@ -184,7 +184,7 @@ def test_validate_extracted_with_matching_text():
 
 
 def test_validate_extracted_with_low_fact_count_warns():
-    # Strip CF down to 1 fact — looks like a stub
+    # Strip CF down to 1 fact; looks like a stub
     cf = _mock_cf()
     cf["facts"]["us-gaap"] = {
         "Revenues": cf["facts"]["us-gaap"]["Revenues"],
@@ -211,7 +211,7 @@ def test_validate_by_reference_with_facts_warns():
 
 def test_validate_period_misalignment_warns():
     cf = _mock_cf()
-    # Bump every fy by 5 years — should trip period_aligned check
+    # Bump every fy by 5 years; should trip period_aligned check
     for concept_data in cf["facts"]["us-gaap"].values():
         for facts in concept_data["units"].values():
             for f in facts:
@@ -234,7 +234,7 @@ def test_validate_extracted_missing_numbers_warns():
 
 
 def test_validate_by_reference_no_text_warning():
-    # If by-reference, missing text values are expected — should NOT warn about that
+    # If by-reference, missing text values are expected; should NOT warn about that
     result = _build_extraction("incorporated_by_reference", "")
     v = validate_filing(result, _mock_cf())
     # Status warning shouldn't fire (3 facts is below the 50-fact threshold)

@@ -49,13 +49,13 @@ def test_transient_http_includes_timeout():
 
 
 def test_transient_http_excludes_4xx_other():
-    """HTTP 400/401/403 are caller errors, not transient — don't retry."""
+    """HTTP 400/401/403 are caller errors, not transient; don't retry."""
     assert not is_transient_http_error(RuntimeError("Error code: 400 bad request"))
     assert not is_transient_http_error(RuntimeError("Error code: 401 unauthorized"))
 
 
 def test_transient_http_excludes_substring_match():
-    """A message containing '5028' is NOT a 502 — predicate must be specific."""
+    """A message containing '5028' is NOT a 502; predicate must be specific."""
     assert not is_transient_http_error(RuntimeError("Error 5028 not a real code"))
 
 

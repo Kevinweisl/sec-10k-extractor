@@ -37,9 +37,9 @@ required.
 ## Edge cases handled
 
 - **GE 2021 cross-reference TOC filings**: body is topical, TOC at end is the
-  canonical Item declaration — special parser path.
+  canonical Item declaration; special parser path.
 - **Chemical Banking 1995 SGML era (form 10-K405)**: pre-iXBRL, edgartools
-  rejects the form — falls through to regex-based segmentation.
+  rejects the form; falls through to regex-based segmentation.
 - **ABS Reg AB filings (e.g., John Deere Owner Trust)**: detected via Reg AB
   Item 11XX patterns; returns single `non_standard` placeholder.
 - **10-K/A amendments**: only Items present in the amendment are returned.

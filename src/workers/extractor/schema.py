@@ -20,7 +20,7 @@ Status = Literal[
     "not_applicable",             # explicit "Not applicable" or "None"
     "reserved",                   # "[Reserved]" (Item 6 since 2021)
     "partial",                    # mixed in-line + by-reference (e.g. Apple 2024 Item 10)
-    "non_standard",               # Reg AB ABS 10-Ks etc. — schema doesn't apply
+    "non_standard",               # Reg AB ABS 10-Ks etc.; schema doesn't apply
 ]
 
 
@@ -88,7 +88,7 @@ class NumericReconciliation(BaseModel):
 class XBRLValidation(BaseModel):
     """Phase 3 cross-validation against SEC XBRL Company Facts.
 
-    None of these are hard failures — XBRL is one signal among several.
+    None of these are hard failures; XBRL is one signal among several.
     Honest reporting means we surface mismatches, not silently pass.
     """
 

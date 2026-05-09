@@ -6,7 +6,7 @@ Three model families, all OpenAI-compatible (NVIDIA NIM hosts all three):
   - Mistral Medium 3.5 128B
 
 These have meaningfully different training distributions, so K=3 ensemble
-voting on discrete-classification roles produces uncorrelated errors —
+voting on discrete-classification roles produces uncorrelated errors.
 which is what makes voting actually work, vs. running the same model 3x.
 
 Per-role configuration via env vars (see .env.example):
@@ -107,7 +107,7 @@ def _build_thinking_extra_body(style: str, on: bool) -> dict | None:
             "reasoning_budget": _NEMOTRON_BUDGET_ON if on else 0,
         }
     if style == "enable_thinking_simple":
-        # Qwen / Gemma — chat_template_kwargs.enable_thinking only, no budget knob.
+        # Qwen / Gemma; chat_template_kwargs.enable_thinking only, no budget knob.
         return {"chat_template_kwargs": {"enable_thinking": bool(on)}}
     if style == "openai_reasoning_effort":
         # Mistral uses top-level reasoning_effort, not extra_body; handled by caller
@@ -115,7 +115,7 @@ def _build_thinking_extra_body(style: str, on: bool) -> dict | None:
     return None
 
 
-# Per-provider concurrency cap — NVIDIA NIM trial accounts rate-limit aggressively.
+# Per-provider concurrency cap; NVIDIA NIM trial accounts rate-limit aggressively.
 # Each provider gets its own semaphore so a slow provider doesn't starve others.
 # Override via NIM_MAX_CONCURRENT env var.
 _MAX_CONCURRENT = int(os.environ.get("NIM_MAX_CONCURRENT", "3"))
@@ -126,7 +126,7 @@ _MAX_CONCURRENT = int(os.environ.get("NIM_MAX_CONCURRENT", "3"))
 # "Semaphore is bound to a different event loop".
 #
 # Using WeakKeyDictionary keyed on the loop object itself (not its id):
-# when the loop is garbage-collected, the entry vanishes — no risk of an
+# when the loop is garbage-collected, the entry vanishes; no risk of an
 # id() being recycled and the cache returning a semaphore bound to a dead
 # loop. Recommended pattern in 2026-05-01-failure-mode-fixes.md §4.
 import weakref
@@ -179,7 +179,7 @@ async def _call_one(
 
 # Wrapped chat-completion call with transient-HTTP retry. Lives outside _call_one
 # so the decorator instance is created once at import time, not per-call. Retry
-# attempts honor the semaphore from the caller — held throughout the backoff.
+# attempts honor the semaphore from the caller; held throughout the backoff.
 @retry_async(
     max_attempts=int(os.environ.get("NIM_MAX_RETRY_ATTEMPTS", "3")),
     base_delay=float(os.environ.get("NIM_RETRY_BASE_DELAY", "1.0")),
@@ -270,7 +270,7 @@ async def vote_role(
 
     `parser` extracts the discrete decision from each model's raw text (e.g.
     parse_status_json -> Status). Parser MUST be tolerant of malformed output
-    and may raise — those votes are discarded.
+    and may raise; those votes are discarded.
 
     Tie-breaks (1-1-1 with 3 models, etc.) defer to `fallback` if provided.
     If no parser succeeds for ANY voter, returns the fallback with
@@ -307,7 +307,7 @@ async def vote_role(
             pick=fallback, confidence=0.0, votes=[], fallback_used=True,
         )
 
-    # Tally — Counter on the parsed values. Values must be hashable; if a
+    # Tally; Counter on the parsed values. Values must be hashable; if a
     # caller's parser produces dicts, they should make-key in the parser.
     tally = Counter(v for _, v, _ in parsed_votes)
     most_common = tally.most_common()
@@ -323,7 +323,7 @@ async def vote_role(
                 votes=parsed_votes,
                 fallback_used=True,
             )
-        # No fallback — first parsed vote wins as a deterministic tiebreak
+        # No fallback; first parsed vote wins as a deterministic tiebreak
         top_value = parsed_votes[0][1]
         top_count = sum(1 for _, v, _ in parsed_votes if v == top_value)
 

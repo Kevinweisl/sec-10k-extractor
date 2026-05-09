@@ -32,7 +32,7 @@ def test_align_returns_none_for_empty_inputs():
 
 
 def test_align_whitespace_tolerant():
-    """edgartools sometimes drops a space — '(a)Documents' in segment vs
+    """edgartools sometimes drops a space; '(a)Documents' in segment vs
     '(a) Documents' in source. The whitespace-tolerant fallback should catch it."""
     source = "X" * 500 + " (a) Documents filed as part of this report including the annual exhibit index for fiscal year 2024 with all required schedules. " + "Y" * 200
     segment = "Item 15.\n(a)Documents filed as part of this report including the annual exhibit index for fiscal year 2024 with all required schedules."
@@ -70,10 +70,10 @@ def test_align_min_start_enforces_sequential():
     body = "Boilerplate that appears in two places exactly. " * 4
     source = body + " UNIQUE-MIDDLE-MARKER " + body + " TAIL"
     segment = "Item 11.\n" + body
-    # without constraint — finds first occurrence
+    # without constraint; finds first occurrence
     s1 = align_to_source(segment, source)
     assert s1 is not None
-    # with constraint — must find the second occurrence
+    # with constraint; must find the second occurrence
     s2 = align_to_source(segment, source, min_start=s1[1] + 10)
     assert s2 is not None
     assert s2[0] > s1[0]

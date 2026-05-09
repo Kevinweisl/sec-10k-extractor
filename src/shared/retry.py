@@ -2,7 +2,7 @@
 
 Used to wrap remote-API calls with exponential backoff on transient failures
 (rate limits, gateway errors, timeouts). Decorator form so individual call
-sites only declare WHAT they want retried — not the bookkeeping.
+sites only declare WHAT they want retried; not the bookkeeping.
 
     from shared.retry import retry_async, is_transient_http_error
 
@@ -13,12 +13,12 @@ sites only declare WHAT they want retried — not the bookkeeping.
             r.raise_for_status()
             return r.json()
 
-    # Custom predicate — only retry on the rate-limit case
+    # Custom predicate; only retry on the rate-limit case
     @retry_async(max_attempts=5, predicate=is_rate_limit_error)
     async def call_llm(...):
         ...
 
-The decorator is async-only by design — synchronous retries would block the
+The decorator is async-only by design; synchronous retries would block the
 event loop. If you need a sync version, write one alongside; don't make this
 do both via runtime checks.
 """
@@ -43,7 +43,7 @@ def is_rate_limit_error(exc: BaseException) -> bool:
     """Match HTTP 429 / "Too Many Requests" errors.
 
     Works across OpenAI client, httpx, and bare requests-style exceptions
-    by string-matching the message — these all surface 429s differently
+    by string-matching the message; these all surface 429s differently
     (status_code attr, body text, exception class) but consistently include
     one of these markers.
     """
@@ -63,7 +63,7 @@ def is_transient_http_error(exc: BaseException) -> bool:
         return True
     msg = str(exc)
     for code in ("502", "503", "504"):
-        # be specific — don't match "5028" or random other numerics
+        # be specific; don't match "5028" or random other numerics
         if (f"{code} " in msg) or (f"code: {code}" in msg) or (f"status_code={code}" in msg):
             return True
     if "timeout" in msg.lower() or "timed out" in msg.lower():
@@ -127,7 +127,7 @@ def retry_async(
                     if not predicate(exc):
                         raise
                     if attempt == max_attempts - 1:
-                        # Out of attempts — propagate the last error
+                        # Out of attempts; propagate the last error
                         raise
                     raw_delay = min(base_delay * (2 ** attempt), max_delay)
                     if jitter > 0:
@@ -142,7 +142,7 @@ def retry_async(
                         type(exc).__name__, delay,
                     )
                     await asyncio.sleep(delay)
-            # Unreachable in practice — the loop always either returns or raises
+            # Unreachable in practice; the loop always either returns or raises
             raise last_exc if last_exc else RuntimeError("retry_async exhausted")
 
         return wrapper

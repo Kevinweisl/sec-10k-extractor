@@ -1,4 +1,4 @@
-"""Era detection tests — make sure items appear/disappear at the right SEC milestones."""
+"""Era detection tests; make sure items appear/disappear at the right SEC milestones."""
 
 from datetime import date
 
@@ -12,7 +12,7 @@ def test_post_2024_apple_has_item_1c():
 
 
 def test_apple_2023_just_misses_item_1c():
-    # Apple FY2023 10-K filed 2023-11-03, FYE 2023-09-30 — BEFORE 2023-12-15 cutoff
+    # Apple FY2023 10-K filed 2023-11-03, FYE 2023-09-30; BEFORE 2023-12-15 cutoff
     items = items_applicable(date(2023, 11, 3), date(2023, 9, 30))
     assert "1C" not in items
 

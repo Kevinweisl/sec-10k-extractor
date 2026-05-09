@@ -1,14 +1,14 @@
-"""Phase 3 — cross-validate Item 8 against SEC XBRL Company Facts.
+"""Phase 3; cross-validate Item 8 against SEC XBRL Company Facts.
 
 The SEC publishes structured XBRL data per company at:
   https://data.sec.gov/api/xbrl/companyfacts/CIK{10-digit-padded}.json
 
 For each filing, we check four signals:
-  A. has_xbrl_data    — filing has any XBRL facts at all (1995 SGML era → False)
-  B. status_consistent — Item 8 status agrees with fact count
+  A. has_xbrl_data   ; filing has any XBRL facts at all (1995 SGML era → False)
+  B. status_consistent; Item 8 status agrees with fact count
                          (extracted ⇒ ≥20 facts; incorporated_by_reference ⇒ <5)
-  C. period_aligned   — XBRL fact periods align with our period_ending
-  D. numeric reconciliation — Revenues / NetIncome / Assets values appear in
+  C. period_aligned  ; XBRL fact periods align with our period_ending
+  D. numeric reconciliation; Revenues / NetIncome / Assets values appear in
                               Item 8 text (allowing thousands / millions / billions
                               scaling, since 10-K narrative often abbreviates).
 
@@ -40,7 +40,7 @@ _USER_AGENT = os.environ.get(
     "Kevin Wei interview-hw-2026 weisl@nlg.csie.ntu.edu.tw",
 )
 
-# Cache XBRL JSONs to disk — these can be 5-50MB and rarely change for old
+# Cache XBRL JSONs to disk; these can be 5-50MB and rarely change for old
 # filings. Refetch if older than 24h.
 _CACHE_DIR = Path(os.environ.get("XBRL_CACHE_DIR", "data/xbrl_cache"))
 _CACHE_TTL_SECONDS = 24 * 60 * 60
@@ -151,7 +151,7 @@ def _pick_fy_value(
         facts = facts_subset.get(concept, [])
         if not facts:
             continue
-        # Prefer FY period — the 10-K headline number
+        # Prefer FY period; the 10-K headline number
         fy_facts = [f for f in facts if f.get("fp") == "FY"]
         if fiscal_year is not None:
             fy_facts = [f for f in fy_facts if f.get("fy") == fiscal_year] or fy_facts
@@ -180,12 +180,12 @@ def _value_appears_in_text(value: float, text: str) -> str | None:
         return None
     abs_val = abs(value)
 
-    # Exact representations — XBRL stores raw integers, so try those.
+    # Exact representations; XBRL stores raw integers, so try those.
     int_val = int(round(abs_val))
     if f"{int_val:,}" in text:
         return "exact"
 
-    # Scaled forms — try 0 / 1 / 2 decimal places. 10-K narrative typically
+    # Scaled forms; try 0 / 1 / 2 decimal places. 10-K narrative typically
     # says "391.0" or "391" or "391.04".
     scales = (
         (1_000, "thousands"),
@@ -245,7 +245,7 @@ def validate_filing(
     item_8_text = item_8.content_text if item_8 else ""
     warnings: list[str] = []
 
-    # Signal B — status vs. count consistency. Threshold values: <20 facts is
+    # Signal B; status vs. count consistency. Threshold values: <20 facts is
     # "barely scaffolded"; >50 with by-ref status implies the body is actually
     # inline despite the label. Calibrated against the silver-set baselines.
     status_consistent = True
@@ -259,10 +259,10 @@ def validate_filing(
         status_consistent = False
         warnings.append(
             f"Item 8 marked incorporated_by_reference but {total_facts} XBRL facts "
-            "tagged to this accession — financials likely inline after all.",
+            "tagged to this accession; financials likely inline after all.",
         )
 
-    # Signal C — period alignment
+    # Signal C; period alignment
     fiscal_year = _expected_fiscal_year(extraction.filing.period_ending)
     period_aligned = True
     if fiscal_year is not None:
@@ -276,7 +276,7 @@ def validate_filing(
                     f"({extraction.filing.period_ending}, fy={fiscal_year}).",
                 )
 
-    # Signal D — numeric reconciliation against Item 8 text
+    # Signal D; numeric reconciliation against Item 8 text
     reconciliations: list[NumericReconciliation] = []
     for concept_group in (_REVENUE_CONCEPTS, _NET_INCOME_CONCEPTS, _ASSETS_CONCEPTS):
         picked = _pick_fy_value(facts_subset, concept_group, fiscal_year)
@@ -297,7 +297,7 @@ def validate_filing(
         ))
 
     # If Item 8 is by-reference (or absent), missing reconciliations are
-    # expected — don't warn.
+    # expected; don't warn.
     if item_8_status == "extracted" and reconciliations:
         misses = [r for r in reconciliations if not r.found_in_item8]
         if misses:

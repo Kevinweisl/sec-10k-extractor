@@ -1,4 +1,4 @@
-// SEC 10-K Item Extractor — vanilla JS, no framework.
+// SEC 10-K Item Extractor: vanilla JS, no framework.
 // Talks to the FastAPI backend mounted at the same origin.
 
 const API = {
@@ -209,7 +209,7 @@ function renderItemDetail(item) {
   const truncated = (item.content_text || '').length > 1500 ? ' (truncated to 1500 chars)' : '';
   const charRange = item.char_range_text
     ? `text [${item.char_range_text[0]}, ${item.char_range_text[1]}]${item.char_range_html ? ` · html [${item.char_range_html[0]}, ${item.char_range_html[1]}]` : ''}`
-    : '(no char range — alignment failed or by-reference body)';
+    : '(no char range; alignment failed or by-reference body)';
   const ref = item.references
     ? `<div class="detail-row"><b>References</b><div class="reference">${escapeHtml(item.references.target_form || 'DEF 14A')}${item.references.expected_year ? ` · expected year ${item.references.expected_year}` : ''}</div></div>`
     : '';
@@ -219,7 +219,7 @@ function renderItemDetail(item) {
   return `
     ${excerpt
       ? `<div class="detail-row"><b>Content excerpt${truncated}</b><pre class="content-excerpt">${escapeHtml(excerpt)}</pre></div>`
-      : `<div class="detail-row"><b>Content</b><span class="char-range">(empty — see status)</span></div>`}
+      : `<div class="detail-row"><b>Content</b><span class="char-range">(empty; see status)</span></div>`}
     <div class="detail-row"><b>Char range</b><span class="char-range">${escapeHtml(charRange)}</span></div>
     ${ref}
     ${segs}
@@ -231,7 +231,7 @@ function renderFooterMeta(meta, xbrl) {
   if (xbrl) {
     if (xbrl.has_xbrl_data) {
       const ok = xbrl.item_8_status_consistent && xbrl.period_aligned;
-      bits.push(`<span class="check ${ok ? 'ok' : 'warn'}">XBRL: ${xbrl.total_facts_for_accession} facts${ok ? '' : ' (inconsistencies — see warnings)'}</span>`);
+      bits.push(`<span class="check ${ok ? 'ok' : 'warn'}">XBRL: ${xbrl.total_facts_for_accession} facts${ok ? '' : ' (inconsistencies; see warnings)'}</span>`);
     } else {
       bits.push(`<span class="check warn">XBRL: not present (pre-iXBRL or amendment)</span>`);
     }

@@ -1,4 +1,4 @@
-"""Status classifier tests — the core of Phase 1.
+"""Status classifier tests; the core of Phase 1.
 
 Test patterns are adapted from real Apple 2024 10-K fragments and known SEC boilerplate.
 """

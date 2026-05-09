@@ -252,7 +252,7 @@ button.demo .characteristic {
 .item-row .item-title.dim { color: #8b949e; font-style: italic; }
 
 /* Status badges. Class names mirror the Status enum in
-   src/workers/extractor/schema.py — keep in sync if that enum changes. */
+   src/workers/extractor/schema.py; keep in sync if that enum changes. */
 .status-badge {
   display: inline-block;
   padding: 2px 8px;

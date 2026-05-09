@@ -1,16 +1,16 @@
-"""Phase 2 — LLM status augmentation for SEC 10-K extractor.
+"""Phase 2; LLM status augmentation for SEC 10-K extractor.
 
 Phase 1 (rules-only) catches the unambiguous ~80% for free. Phase 2 LLM only
-escalates the cases Phase 1 is uncertain about — keeping cost in check and
+escalates the cases Phase 1 is uncertain about; keeping cost in check and
 respecting the rule "if Phase 1 is confident, trust Phase 1".
 
 Triggers (`should_augment_status`):
-  - Phase 1 returned `extracted` but content < 500 chars  (suspicious — too short
+  - Phase 1 returned `extracted` but content < 500 chars  (suspicious; too short
     to be substantive)
   - Phase 1 returned `extracted` but content contains "incorporated" or "by
     reference" (within-document or proxy by-ref Phase 1 missed)
   - Phase 1 returned `extracted` but content contains a "See Item N" pattern
-    (within-document cross-reference — common in 1995-era banking 10-Ks)
+    (within-document cross-reference; common in 1995-era banking 10-Ks)
   - Phase 1 returned `extracted` but content contains "remaining/additional/
     other information ... Item" (canonical partial-disclosure phrasing)
 
@@ -42,7 +42,7 @@ log = logging.getLogger(__name__)
 
 _VALID_STATUSES = frozenset(get_args(Status))
 
-# Triggers — Phase 1 is uncertain when content_text shows these patterns.
+# Triggers; Phase 1 is uncertain when content_text shows these patterns.
 _RE_INCORPORATED_HINT = re.compile(
     r"\b(?:incorporated\s+(?:herein\s+)?by\s+reference|by\s+reference\s+(?:to|herein))\b",
     re.IGNORECASE,
@@ -71,12 +71,12 @@ def should_augment_status(phase1_status: Status, content_text: str) -> str | Non
     text = content_text or ""
     # Cross-reference TOC items (GE 2021 style) carry the TOC entry as their
     # content_text. The status_hint from the TOC is more authoritative than
-    # anything an LLM can infer from a 50-char snippet — never augment these.
+    # anything an LLM can infer from a 50-char snippet; never augment these.
     if text.lstrip().startswith("[Cross-reference TOC]"):
         return None
     n = len(text)
     if n < 500:
-        return f"short content ({n} chars) — possible missed by-reference"
+        return f"short content ({n} chars); possible missed by-reference"
     if _RE_INCORPORATED_HINT.search(text):
         return "contains 'incorporated by reference' phrase"
     if _RE_SEE_ITEM_HINT.search(text):
@@ -94,20 +94,20 @@ Categories:
 - incorporated_by_reference: WHOLE item refers to another document (e.g. Proxy Statement DEF 14A) instead of containing content here
 - not_applicable: explicit "Not applicable", "None", or equivalent
 - reserved: "[Reserved]" placeholder (Item 6 since 2021)
-- partial: MIXED — some content inline AND some incorporated by reference
+- partial: MIXED; some content inline AND some incorporated by reference
 
 Within-document references (e.g. "See Item 13 below") count as incorporated_by_reference because the item's body is elsewhere in the filing.
 
 A short paragraph (<500 chars) that mentions an inline detail BUT also says "Item X is incorporated by reference" should be classified as `partial`.
 
-Reply with exactly this JSON structure on a single line — no prose, no markdown fences:
+Reply with exactly this JSON structure on a single line; no prose, no markdown fences:
 {"status": "<one of the 5 categories>", "confidence": <0.0-1.0>, "rationale": "<one sentence>"}
 """
 
 
 def _build_messages(item_number: str, item_title: str, content_text: str,
                     phase1_status: Status, trigger_reason: str) -> list[dict]:
-    # Cap content length to keep token cost in check — 4000 chars covers the
+    # Cap content length to keep token cost in check; 4000 chars covers the
     # decisive opening of most items; long bodies don't add classification signal.
     content_excerpt = content_text[:4000]
     if len(content_text) > 4000:
@@ -180,11 +180,11 @@ async def augment_status(
 # ── Decision policy: when to override Phase 1 ────────────────────────────────
 #
 # `LLM_AUG_OVERRIDE_THRESHOLD` env knob (default 0.51):
-#   - 0.51 — any majority vote overrides Phase 1 (2/3 under K=3, unanimous
+#   - 0.51; any majority vote overrides Phase 1 (2/3 under K=3, unanimous
 #     under K=2). Captures more wins (e.g. Chemical Banking 1995 Items 9-12
 #     correctly upgraded to incorporated_by_reference) at the cost of some
 #     losses (e.g. Apple 2024 Items 1C/15 reclassified to "partial").
-#   - 0.99 — only unanimous votes override (3/3 under K=3, never under K=2
+#   - 0.99; only unanimous votes override (3/3 under K=3, never under K=2
 #     since a tie falls back). Conservative; prefers Phase 1 deterministic
 #     output. Use when Phase 1 precision is more important than LLM recall.
 #

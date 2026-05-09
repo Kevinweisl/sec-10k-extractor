@@ -12,7 +12,7 @@ import os
 
 from edgar import Company, Filing, set_identity
 
-# SEC requires User-Agent identification — set once at import time.
+# SEC requires User-Agent identification; set once at import time.
 _IDENTITY = os.environ.get(
     "SEC_USER_AGENT",
     "Kevin Wei interview-hw-2026 weisl@nlg.csie.ntu.edu.tw",

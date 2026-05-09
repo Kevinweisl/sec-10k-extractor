@@ -23,7 +23,7 @@ ALL_ITEMS_BY_PART: dict[int, list[str]] = {
     4: ["15", "16"],
 }
 
-# Items introduced after the form's original 1934 layout — keyed by item_number.
+# Items introduced after the form's original 1934 layout; keyed by item_number.
 # `1C` uses `period_ending` cutoff (rule applies to fiscal years ending on/after);
 # the others use `filing_date` cutoff (close-enough heuristic for the <2-week skew).
 ITEM_INTRO: dict[str, date] = {

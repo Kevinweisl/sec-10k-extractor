@@ -3,7 +3,7 @@
 edgartools doesn't expose source offsets, so we use difflib + whitespace-tolerant
 regex fallback to find each segment's span within the source.
 
-Spec-required field: `char_range`. We expose two — `char_range_text` (cleaned
+Spec-required field: `char_range`. We expose two; `char_range_text` (cleaned
 plain text) and `char_range_html` (raw HTML). Both are optional; we return None
 when match confidence is too low rather than guessing.
 
@@ -11,13 +11,13 @@ Robustness layers (each is a fallback for the previous failing):
   1. SequenceMatcher on a 120-char fingerprint from the segment body.
   2. Whitespace-tolerant regex on the same fingerprint (handles cases like
      edgartools outputting "(a)Documents" where source has "(a) Documents").
-  3. Two more fingerprints from offsets 200 and 500 of the segment body —
+  3. Two more fingerprints from offsets 200 and 500 of the segment body.
      in case the head fingerprint hits a section that's been collapsed.
 
 Sequential constraint:
   Items in a 10-K appear in document order. We accept a `min_start` argument
   so callers can thread "search after the previous match's end", which fixes
-  the by-reference-boilerplate collision (Items 11–14 all use near-identical
+  the by-reference-boilerplate collision (Items 11-14 all use near-identical
   text and a naive matcher will resolve all four to the same offset).
 """
 
@@ -46,7 +46,7 @@ def align_to_source(
     """Return (start, end) char offsets of segment_text within source[min_start:],
     or None if no fingerprint reaches the confidence threshold.
 
-    `min_start` lets the caller enforce sequential-document ordering — pass the
+    `min_start` lets the caller enforce sequential-document ordering; pass the
     previous successful match's end position to avoid two adjacent items
     resolving to the same boilerplate snippet.
     """
@@ -68,7 +68,7 @@ def align_to_source(
             # too short to be uniquely identifying
             continue
 
-        # Layer 1 — exact-character SequenceMatcher
+        # Layer 1; exact-character SequenceMatcher
         match = _seq_match(sub, fp)
         if match is not None:
             confidence, m_start = match
@@ -78,10 +78,10 @@ def align_to_source(
             if best is None or candidate[0] > best[0]:
                 best = candidate
             if confidence >= len(fp):
-                # exact match — no need to keep searching
+                # exact match; no need to keep searching
                 break
 
-        # Layer 2 — whitespace-tolerant regex
+        # Layer 2; whitespace-tolerant regex
         m = _whitespace_tolerant_search(sub, fp)
         if m is not None:
             m_start = m.start()
@@ -127,7 +127,7 @@ def _seq_match(source: str, fingerprint: str) -> tuple[int, int] | None:
 
     Fast path: literal `str.find` (microseconds on MB-sized source). Most
     Phase-1 segments come straight from edgartools and the fingerprint is
-    a literal substring of the source — no fuzzy match needed.
+    a literal substring of the source; no fuzzy match needed.
 
     Fallback: SequenceMatcher (O(N*M); seconds on MB-sized source) for
     segments where edgartools normalised whitespace or unicode away from

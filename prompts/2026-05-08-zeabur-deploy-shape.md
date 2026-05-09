@@ -1,4 +1,6 @@
-# 2026-05-08: Choosing the Zeabur deploy shape (API vs API+UI vs cached demo)
+# 2026-05-08: Choosing the Zeabur deploy shape
+
+API vs API+UI vs cached demo.
 
 The brief is unambiguous about Task 3: "在 Zeabur 部署為 API". But three honest readings exist for what counts as a deployable demo.
 
@@ -20,12 +22,12 @@ Weakness: a JSON-only demo is the kind of submission that takes 30 seconds to ev
 ### Option B: API + simple UI
 Add a vanilla JS UI that calls `/extract` and renders the items table with status-coloured badges, char_range hover, content excerpt expand. ~6-8h.
 
-Strength: a graders can see the *value* of the multi-status taxonomy at a glance — extracted vs IBR vs partial colour-codes the cost of conflating them. That's the differentiator over a plain-text "10-K parser".
+Strength: a graders can see the *value* of the multi-status taxonomy at a glance: extracted vs IBR vs partial colour-codes the cost of conflating them. That's the differentiator over a plain-text "10-K parser".
 
 ### Option C: API + UI + pre-loaded demo filings
 Option B plus a pre-rendered cache of the 3 gold + 7 silver filings, so demo buttons resolve instantly with zero SEC traffic. ~8-10h.
 
-Strength: addresses the "Berkshire 2026 takes 184 sec to extract live, evaluator gets bored" failure mode. Also lets us hold a hard policy that the public server runs Phase 1 only — the cache covers the eval set, the live path covers anything else, and Phase 2 LLM augmentation never reaches the public URL.
+Strength: addresses the "Berkshire 2026 takes 184 sec to extract live, evaluator gets bored" failure mode. Also lets us hold a hard policy that the public server runs Phase 1 only: the cache covers the eval set, the live path covers anything else, and Phase 2 LLM augmentation never reaches the public URL.
 
 ## Decision
 
@@ -33,17 +35,17 @@ Strength: addresses the "Berkshire 2026 takes 184 sec to extract live, evaluator
 
 1. **Cost discipline visible to the grader.** The grading axis explicitly calls out "成本紀律". Phase-1-only public demo + cached gold/silver filings is a *demonstration* of cost discipline, not just an asserted property. The build_demo_cache.py script makes the discipline auditable: SEC fetches happen at build time, never at request time.
 
-2. **The 184-second silver filing.** Berkshire 2026's modern multi-document format genuinely takes 3 minutes end-to-end to extract. A live-only deploy would mean `curl` calls timing out for filings the grader is most likely to test (large modern conglomerates). The cached path covers that case without lying about how fast extraction actually is.
+2. **The 184-second silver filing.** Berkshire 2026's modern multi-document format genuinely takes 3 minutes end to end to extract. A live-only deploy would mean `curl` calls timing out for filings the grader is most likely to test (large modern conglomerates). The cached path covers that case without lying about how fast extraction actually is.
 
 3. **The status taxonomy needs visual reinforcement.** The pitch of this Task is "treating extracted/IBR/N/A/reserved/partial uniformly is wrong". A status-coloured badge column makes that pitch in 2 seconds; a JSON dump makes it in 2 minutes. UI cost is paid back by evaluator-time saved.
 
 ## Trade-offs accepted
 
-- **Public demo runs Phase 1 only.** This is enforced by hard-coding `enable_llm_aug=False` in `_run_extract`. The Phase 2 K-vote ensemble logic is in the codebase and runnable offline; documenting the threshold knob and Chemical Banking 1995 ambiguity is in `docs/per-task/task3-llm-threshold-decision.md`. We don't lose interview signal by hiding Phase 2 from the public URL — the threshold-decision doc is the place that shows the depth.
+- **Public demo runs Phase 1 only.** This is enforced by hard-coding `enable_llm_aug=False` in `_run_extract`. The Phase 2 K-vote ensemble logic is in the codebase and runnable offline; documenting the threshold knob and Chemical Banking 1995 ambiguity is in `docs/per-task/task3-llm-threshold-decision.md`. We don't lose interview signal by hiding Phase 2 from the public URL; the threshold-decision doc is the place that shows the depth.
 
 - **Cache files are checked into the repo (not built at container start).** Container start would mean every redeploy fires 10 SEC requests, hit rate-limits, and slow cold starts. Build-time + git-checked is reproducible and explicit.
 
-- **Free-form input still goes live.** Per brief: "我們會用自己挑選的 filings 呼叫它". Hidden evaluators bring their own filings; cache wouldn't cover them. So `POST /extract` is the live path with rate-limit + 60s timeout + sanitised errors.
+- **Free-form input still goes live.** Per brief: "我們會用自己挑選的 filings 呼叫它". Hidden evaluators bring their own filings; cache wouldn't cover them. So `POST /extract` is the live path with rate-limit, 60s timeout, and sanitised errors.
 
 ## What this captures for the interviewer
 

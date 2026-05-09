@@ -19,7 +19,7 @@ from workers.extractor.llm_assist import (
 )
 
 
-# ── should_augment_status — when does Phase 2 fire? ──────────────────────────
+# ── should_augment_status; when does Phase 2 fire? ──────────────────────────
 
 def test_should_augment_skips_non_extracted_phase1():
     """Phase 1 verdicts other than 'extracted' are high-confidence; don't escalate."""
@@ -31,7 +31,7 @@ def test_should_augment_skips_non_extracted_phase1():
 
 
 def test_should_augment_short_extracted():
-    """Short 'extracted' content is suspicious — escalate."""
+    """Short 'extracted' content is suspicious; escalate."""
     reason = should_augment_status("extracted", "Short content here.")
     assert reason and "short content" in reason.lower()
 
@@ -79,7 +79,7 @@ def test_should_augment_skips_cross_ref_toc_items():
     assert should_augment_status("extracted", toc_content) is None
 
 
-# ── _parse_status_response — robust JSON parsing ─────────────────────────────
+# ── _parse_status_response; robust JSON parsing ─────────────────────────────
 
 def test_parse_clean_json():
     raw = '{"status": "incorporated_by_reference", "confidence": 0.85, "rationale": "..."}'
@@ -123,7 +123,7 @@ def test_parse_missing_status_field_raises():
         _parse_status_response(raw)
 
 
-# ── should_override_phase1 — override threshold policy ───────────────────────
+# ── should_override_phase1; override threshold policy ───────────────────────
 
 def test_override_when_majority_disagrees():
     vote = VoteResult(pick="incorporated_by_reference", confidence=2 / 3, votes=[])
@@ -142,7 +142,7 @@ def test_no_override_on_tie_fallback():
 
 
 def test_no_override_below_confidence_threshold():
-    """Edge case: 1 of 3 voters disagreed (confidence=1/3) — not enough."""
+    """Edge case: 1 of 3 voters disagreed (confidence=1/3); not enough."""
     vote = VoteResult(pick="incorporated_by_reference", confidence=1 / 3, votes=[])
     assert should_override_phase1(vote, phase1_status="extracted") is False
 
@@ -152,7 +152,7 @@ def test_override_at_threshold_with_two_thirds():
     assert should_override_phase1(vote, phase1_status="extracted") is True
 
 
-# ── augment_status — integration with vote_role ──────────────────────────────
+# ── augment_status; integration with vote_role ──────────────────────────────
 
 @pytest.mark.asyncio
 async def test_augment_status_returns_vote_result():

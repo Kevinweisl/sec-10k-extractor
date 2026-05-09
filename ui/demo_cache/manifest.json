@@ -2,7 +2,7 @@
   "filings": [
     {
       "slug": "apple-2024",
-      "label": "Apple Inc. — FY2024",
+      "label": "Apple Inc. (FY2024)",
       "cik": "320193",
       "accession": "0000320193-24-000123",
       "form_type": "10-K",
@@ -12,7 +12,7 @@
     },
     {
       "slug": "ge-2021",
-      "label": "General Electric — FY2021",
+      "label": "General Electric (FY2021)",
       "cik": "40545",
       "accession": "0000040545-21-000011",
       "form_type": "10-K",
@@ -22,27 +22,27 @@
     },
     {
       "slug": "chemical-banking-1995",
-      "label": "Chemical Banking — FY1995",
+      "label": "Chemical Banking (FY1995)",
       "cik": "19617",
       "accession": "0000950123-95-000706",
       "form_type": "10-K405",
       "period_ending": "1994-12-31",
-      "characteristic": "Pre-iXBRL SGML 10-K405 — pure-text era; tests the SGML support path.",
+      "characteristic": "Pre-iXBRL SGML 10-K405; pure-text era, tests the SGML support path.",
       "source": "gold"
     },
     {
       "slug": "berkshire-2026",
-      "label": "Berkshire Hathaway — FY2025",
+      "label": "Berkshire Hathaway (FY2025)",
       "cik": "1067983",
       "accession": "0001193125-26-083899",
       "form_type": "10-K",
       "period_ending": "2025-12-31",
-      "characteristic": "Conglomerate, latest filing year. Berkshire incorporates Part III (Items 10-14) entirely by reference to the Proxy Statement WITHOUT per-item body sections — the only mention of Items 10-14 is in the TOC. edgartools (and our regex) won't find Part III items because there's nothing to find. Honest finding: modern 10-Ks vary in how they declare by-ref; we recover Items 1, 1A-1C, 2-9C, and 15.",
+      "characteristic": "Conglomerate, latest filing year. Berkshire incorporates Part III (Items 10-14) entirely by reference to the Proxy Statement WITHOUT per-item body sections; the only mention of Items 10-14 is in the TOC. edgartools (and our regex) won't find Part III items because there's nothing to find. Honest finding: modern 10-Ks vary in how they declare by-ref; we recover Items 1, 1A-1C, 2-9C, and 15.",
       "source": "silver"
     },
     {
       "slug": "intel-2022",
-      "label": "Intel — FY2021",
+      "label": "Intel (FY2021)",
       "cik": "50863",
       "accession": "0000050863-22-000007",
       "form_type": "10-K",
@@ -52,22 +52,22 @@
     },
     {
       "slug": "apple-2023",
-      "label": "Apple Inc. — FY2023",
+      "label": "Apple Inc. (FY2023)",
       "cik": "320193",
       "accession": "0000320193-23-000106",
       "form_type": "10-K",
       "period_ending": "2023-09-30",
-      "characteristic": "Item 1C voluntary-disclosure case — FY2023 ended 2023-09-30, before mandatory 1C effective date 2023-12-15. Apple disclosed Item 1C voluntarily, so 1C SHOULD appear (originally we expected it to be absent, but the filing shows otherwise — informative finding).",
+      "characteristic": "Item 1C voluntary-disclosure case: FY2023 ended 2023-09-30, before mandatory 1C effective date 2023-12-15. Apple disclosed Item 1C voluntarily, so 1C SHOULD appear (originally we expected it to be absent, but the filing shows otherwise; informative finding).",
       "source": "silver"
     },
     {
       "slug": "goldman-2024-10ka",
-      "label": "Goldman Sachs — FY2023 (10-K/A)",
+      "label": "Goldman Sachs (FY2023, 10-K/A)",
       "cik": "886982",
       "accession": "0000886982-24-000012",
       "form_type": "10-K/A",
       "period_ending": "2023-12-31",
-      "characteristic": "Part III only amendment. Filing is small (25K chars total) and contains only Item 15 as a per-item heading; Part III items (10-14) are incorporated by reference WITHOUT in-line declarations in the amendment. edgartools' 'All detection strategies failed' warning surfaces, and our regex finds only Item 15. Honest finding: 10-K/A amendments often have minimal content with by-reference Part III — extracting that requires either manual parsing of the by-ref boilerplate or LLM augmentation.",
+      "characteristic": "Part III only amendment. Filing is small (25K chars total) and contains only Item 15 as a per-item heading; Part III items (10-14) are incorporated by reference WITHOUT in-line declarations in the amendment. edgartools' 'All detection strategies failed' warning surfaces, and our regex finds only Item 15. Honest finding: 10-K/A amendments often have minimal content with by-reference Part III, so extracting that requires either manual parsing of the by-ref boilerplate or LLM augmentation.",
       "source": "silver"
     },
     {
@@ -77,27 +77,27 @@
       "accession": "0001558370-24-000566",
       "form_type": "10-K",
       "period_ending": "2023-12-31",
-      "characteristic": "ABS Reg AB filing — non_standard schema",
+      "characteristic": "ABS Reg AB filing; non_standard schema",
       "source": "silver"
     },
     {
       "slug": "berkshire-2019",
-      "label": "Berkshire Hathaway — FY2018",
+      "label": "Berkshire Hathaway (FY2018)",
       "cik": "1067983",
       "accession": "0001193125-19-048926",
       "form_type": "10-K",
       "period_ending": "2018-12-31",
-      "characteristic": "Pre-iXBRL conglomerate — same registrant as 2026 entry but different era",
+      "characteristic": "Pre-iXBRL conglomerate; same registrant as 2026 entry but different era",
       "source": "silver"
     },
     {
       "slug": "intel-2020",
-      "label": "Intel — FY2019",
+      "label": "Intel (FY2019)",
       "cik": "50863",
       "accession": "0000050863-20-000011",
       "form_type": "10-K",
       "period_ending": "2019-12-28",
-      "characteristic": "Large file (~143 MB) — performance/memory smoke test",
+      "characteristic": "Large file (~143 MB); performance/memory smoke test",
       "source": "silver"
     }
   ]

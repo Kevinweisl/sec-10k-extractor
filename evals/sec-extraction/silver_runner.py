@@ -1,4 +1,4 @@
-"""Silver-set runner — coverage and sanity checks on 7 unannotated filings.
+"""Silver-set runner; coverage and sanity checks on 7 unannotated filings.
 
 Silver filings don't have hand-validated `expected_items` lists. Instead,
 each filing has `expected` constraints: minimum item count, must-have items,
@@ -162,19 +162,19 @@ def print_report(report: list[dict], *, with_llm: bool) -> None:
     print("|---|---|---|---|---|---|")
     for r in report:
         if r.get("error"):
-            print(f"| {r['key']} | ERROR | — | {r['error']} | 0 | {r['wall_time_ms']} |")
+            print(f"| {r['key']} | ERROR | . | {r['error']} | 0 | {r['wall_time_ms']} |")
             continue
         v = len(r["violations"])
         a = len(r["aug_overrides"])
         print(f"| {r['key']} | {r['items_found']} | {r['form']} | "
-              f"{v if v else '—'} | {a if a else '—'} | {r['wall_time_ms']} |")
+              f"{v if v else '.'} | {a if a else '.'} | {r['wall_time_ms']} |")
     print()
     # Detail per filing
     for r in report:
         if r.get("error"):
             print(f"\n## {r['key']}\nERROR: {r['error']}")
             continue
-        print(f"\n## {r['key']} — {r['characteristic']}")
+        print(f"\n## {r['key']}; {r['characteristic']}")
         print(f"- CIK={r['cik']}, accession={r['accession']}, form={r['form']}, "
               f"period={r['period_ending']}")
         print(f"- {r['items_found']} items: {', '.join(r['item_numbers'])}")
@@ -224,7 +224,7 @@ def main() -> int:
             print(f"  ERROR: {r['error']}")
         else:
             v = len(r["violations"])
-            print(f"  done in {r['wall_time_ms']}ms — {r['items_found']} items, "
+            print(f"  done in {r['wall_time_ms']}ms; {r['items_found']} items, "
                   f"{v} violations")
 
     args.out.write_text(json.dumps(report, indent=2, default=str))

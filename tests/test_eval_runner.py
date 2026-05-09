@@ -83,7 +83,7 @@ def test_score_extra_item_lowers_precision():
 
 
 def test_score_status_mismatch():
-    """Item present but classified differently — recall/prec stay 1.0,
+    """Item present but classified differently; recall/prec stay 1.0,
     status_accuracy drops."""
     actual = _build_extraction([("1", "extracted"), ("11", "extracted")])
     gold = _build_gold([("1", "extracted"), ("11", "incorporated_by_reference")])

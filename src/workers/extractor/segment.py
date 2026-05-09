@@ -1,7 +1,7 @@
 """Segment a 10-K into items using edgartools' TenK.sections.
 
 edgartools' `tk.sections` is a dict-like with keys like `part_i_item_1`,
-`part_ii_item_7a` — these encode BOTH the part and the item_number, which is
+`part_ii_item_7a`; these encode BOTH the part and the item_number, which is
 what we need for the spec's output schema.
 
 For ABS (Reg AB) 10-Ks, edgartools returns very few sections; we detect this
@@ -44,7 +44,7 @@ def segment_with_edgartools(filing: Filing) -> dict[str, Any]:
     Each item has: part, item_number, item_title, content_text.
 
     For canonical 10-Ks we iterate `tk.sections` (which gives part+item from
-    the key). For ABS or other irregular filings, sections may be empty —
+    the key). For ABS or other irregular filings, sections may be empty.
     we then iterate `tk.items` (item-only labels) and map back to part via
     the era.part_for_item helper.
     """
@@ -101,7 +101,7 @@ def segment_with_edgartools(filing: Filing) -> dict[str, Any]:
 
     # Path 3: regex fallback when edgartools' coverage looks broken.
     # Triggers on filings like GE 2021 (cross-ref TOC) where edgartools yields
-    # only 4 items with duplicate content. Skip for ABS filings — those are
+    # only 4 items with duplicate content. Skip for ABS filings; those are
     # genuinely non-standard, not just mis-parsed.
     used_regex_fallback = False
     if not is_abs and edgartools_coverage_suspect(items) and raw_text:
@@ -123,7 +123,7 @@ def _stringify_section(value: Any) -> str:
     """Extract plain text from a Section / str / other edgartools result, then
     trim any bleed-over into the next item.
 
-    edgartools' section detection is approximate — page-break artifacts cause
+    edgartools' section detection is approximate; page-break artifacts cause
     Item 9C's text to include the start of Item 10 (etc.). We truncate at the
     first occurrence of 'Item N(letter).' past the title to fix this."""
     raw = ""
@@ -161,7 +161,7 @@ def _trim_bleed(text: str) -> str:
         return text
     matches = list(_RE_BLEED.finditer(text))
     if len(matches) >= 2:
-        # second match is the bleed — truncate there
+        # second match is the bleed; truncate there
         text = text[: matches[1].start()].rstrip()
     # Also clip at PART III / PART II header that prefixes Item 10 etc.
     pm = _RE_PART_HEADER.search(text)
@@ -217,14 +217,14 @@ def _looks_like_abs(raw_text: str) -> bool:
     Requires *positive Reg-AB-specific evidence*. We deliberately do NOT
     trigger on plain "asset-backed" / "asset backed" because every major
     bank, credit-card lender, and asset manager mentions those phrases in
-    Item 1 Business prose — a JPM/BofA/Goldman 10-K would be misclassified
+    Item 1 Business prose; a JPM/BofA/Goldman 10-K would be misclassified
     as ABS and return a single non_standard placeholder.
 
     Trigger on either:
       - "regulation ab" anywhere in the first 20K chars (Reg AB filings
         explicitly reference their own regulation in cover/Item 1)
       - "Item 11XX of Regulation AB" (Reg AB defines item numbers in the
-        1100-1123 range — a very specific positive signal)
+        1100-1123 range; a very specific positive signal)
     """
     text_l = raw_text[:20000].lower()
     if "regulation ab" in text_l:

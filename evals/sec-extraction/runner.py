@@ -54,13 +54,13 @@ def score_filing(actual, gold: dict) -> dict:
     expected_set = {_normalize_item_status_pair(it) for it in expected}
     expected_items_set = {it["item_number"].upper() for it in expected}
 
-    # Filter out synthetic 'cover' record from actual when comparing — the gold
+    # Filter out synthetic 'cover' record from actual when comparing; the gold
     # files don't include a synthetic cover-page entry.
     actual_items = [it for it in actual.items if it.item_number != "cover"]
     actual_set = {(it.item_number.upper(), it.status) for it in actual_items}
     actual_items_set = {it.item_number.upper() for it in actual_items}
 
-    # Item-presence recall/precision (status-agnostic — did we find the item?)
+    # Item-presence recall/precision (status-agnostic; did we find the item?)
     item_tp = len(expected_items_set & actual_items_set)
     item_fp = len(actual_items_set - expected_items_set)
     item_fn = len(expected_items_set - actual_items_set)
@@ -200,7 +200,7 @@ def print_markdown_report(report: dict) -> None:
     for r in report["results"]:
         xbrl = r.get("xbrl") or {}
         xbrl_str = (
-            f"{xbrl.get('total_facts', 0)}" if xbrl.get("has_xbrl_data") else "—"
+            f"{xbrl.get('total_facts', 0)}" if xbrl.get("has_xbrl_data") else "."
         )
         print(
             f"| {r['filing']} | {r['items_actual']}/{r['items_expected']} "
