@@ -35,7 +35,7 @@ except ImportError:
     pass
 
 from shared.dates import parse_iso_date  # noqa: E402
-from workers.extractor.era import items_applicable, part_for_item  # noqa: E402
+from workers.extractor.era import items_applicable  # noqa: E402
 from workers.extractor.pipeline import extract_10k  # noqa: E402
 
 
@@ -180,7 +180,7 @@ def print_report(report: list[dict], *, with_llm: bool) -> None:
         if r["unexpected_in_era"]:
             print(f"- items present but not in era: {r['unexpected_in_era']}")
         if r["violations"]:
-            print(f"- VIOLATIONS:")
+            print("- VIOLATIONS:")
             for v in r["violations"]:
                 print(f"  - {v}")
         if r.get("xbrl"):
