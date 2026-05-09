@@ -22,34 +22,34 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from api.cache import load_filings_metadata  # noqa: E402
+from shared.sec_identity import get_user_agent, set_edgar_identity  # noqa: E402
 
 CACHE_DIR = REPO_ROOT / "ui" / "demo_cache"
 MANIFEST_PATH = CACHE_DIR / "manifest.json"
 
+# Cap at 3 concurrent extractions: SEC EDGAR's documented ceiling is 10 req/s
+# globally and a single extract opens ~3 connections (edgartools fetch + XBRL).
+# 3-way parallelism keeps us well under the cap while turning the 10-filing
+# rebuild from ~10 min wall down to ~3-4 min.
+_MAX_PARALLEL = 3
+
 
 def _ensure_user_agent() -> None:
-    ua = os.environ.get("SEC_USER_AGENT", "").strip()
-    if not ua:
-        sys.stderr.write(
-            "ERROR: SEC_USER_AGENT environment variable required.\n"
-            "  export SEC_USER_AGENT='Your Name you@example.com'\n"
-        )
-        sys.exit(2)
     try:
-        from edgar import set_identity
-
-        set_identity(ua)
-    except Exception as exc:  # noqa: BLE001
-        sys.stderr.write(f"WARN: edgartools set_identity failed: {exc}\n")
+        get_user_agent(strict=True)
+    except RuntimeError as exc:
+        sys.stderr.write(f"ERROR: {exc}\n")
+        sys.exit(2)
+    set_edgar_identity()
 
 
 def _build_one(slug: str, cik: str, accession: str) -> dict:
@@ -88,24 +88,35 @@ def main() -> int:
     successes: list[str] = []
     failures: list[tuple[str, str]] = []
 
+    to_build: list[dict] = []
     for f in filings:
-        slug = f["slug"]
-        out = CACHE_DIR / f"{slug}.json"
+        out = CACHE_DIR / f"{f['slug']}.json"
         if out.exists() and not args.force:
-            print(f"  [skip] {slug}: {out.name} already exists (use --force to rebuild)")
-            successes.append(slug)
+            print(f"  [skip] {f['slug']}: {out.name} already exists (use --force to rebuild)")
+            successes.append(f["slug"])
             continue
+        to_build.append(f)
 
-        print(f"  [run]  {slug}: cik={f['cik']} accession={f['accession']} ...", flush=True)
-        try:
-            payload = _build_one(slug, f["cik"], f["accession"])
-            out.write_text(json.dumps(payload, indent=2, ensure_ascii=False, default=str))
-            n_items = len(payload.get("items", []))
-            print(f"         {slug}: {n_items} items -> {out.relative_to(REPO_ROOT)}")
-            successes.append(slug)
-        except Exception as exc:  # noqa: BLE001
-            print(f"         {slug}: FAILED {type(exc).__name__}: {exc}")
-            failures.append((slug, str(exc)))
+    if to_build:
+        print(f"  [parallel] {len(to_build)} filings, max {_MAX_PARALLEL} concurrent")
+        with ThreadPoolExecutor(max_workers=_MAX_PARALLEL) as pool:
+            future_to_filing = {
+                pool.submit(_build_one, f["slug"], f["cik"], f["accession"]): f
+                for f in to_build
+            }
+            for fut in as_completed(future_to_filing):
+                f = future_to_filing[fut]
+                slug = f["slug"]
+                out = CACHE_DIR / f"{slug}.json"
+                try:
+                    payload = fut.result()
+                    out.write_text(json.dumps(payload, indent=2, ensure_ascii=False, default=str))
+                    n_items = len(payload.get("items", []))
+                    print(f"  [done] {slug}: {n_items} items -> {out.relative_to(REPO_ROOT)}")
+                    successes.append(slug)
+                except Exception as exc:  # noqa: BLE001
+                    print(f"  [fail] {slug}: {type(exc).__name__}: {exc}")
+                    failures.append((slug, str(exc)))
 
     # Manifest covers all 10 filings (not just the ones rebuilt this run) so
     # /demo/filings is deterministic regardless of partial rebuilds.

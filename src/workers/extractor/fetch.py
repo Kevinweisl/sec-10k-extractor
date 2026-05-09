@@ -8,18 +8,11 @@ fetch ourselves.
 
 from __future__ import annotations
 
-import os
+from edgar import Company, Filing
 
-from edgar import Company, Filing, set_identity
+from shared.sec_identity import set_edgar_identity
 
-# SEC requires User-Agent identification; set once at import time.
-_IDENTITY = os.environ.get(
-    "SEC_USER_AGENT",
-    "Kevin Wei interview-hw-2026 weisl@nlg.csie.ntu.edu.tw",
-)
-set_identity(_IDENTITY)
-# edgartools also reads EDGAR_IDENTITY
-os.environ.setdefault("EDGAR_IDENTITY", _IDENTITY)
+set_edgar_identity()
 
 
 def find_10k_filing(cik: int | str, accession: str) -> Filing:
@@ -29,7 +22,6 @@ def find_10k_filing(cik: int | str, accession: str) -> Filing:
     """
     cik_int = int(cik)
     company = Company(cik_int)
-    # cover both '10-K' and amendments
     filings = company.get_filings(form=["10-K", "10-K/A", "10-K405"])
     for f in filings:
         if f.accession_no == accession:

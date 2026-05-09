@@ -34,13 +34,9 @@ try:
 except ImportError:
     pass
 
+from shared.dates import parse_iso_date  # noqa: E402
 from workers.extractor.era import items_applicable, part_for_item  # noqa: E402
 from workers.extractor.pipeline import extract_10k  # noqa: E402
-from datetime import date  # noqa: E402
-
-
-def _parse_date(s: str) -> date:
-    return date.fromisoformat(s[:10])
 
 
 def evaluate(filing_spec: dict, *, with_xbrl: bool, with_llm: bool) -> dict:
@@ -73,8 +69,8 @@ def evaluate(filing_spec: dict, *, with_xbrl: bool, with_llm: bool) -> dict:
         status_dist[it.status] = status_dist.get(it.status, 0) + 1
 
     # Era applicability check
-    period = _parse_date(result.filing.period_ending)
-    filing_dt = _parse_date(result.filing.filing_date)
+    period = parse_iso_date(result.filing.period_ending)
+    filing_dt = parse_iso_date(result.filing.filing_date)
     era_applicable = set(items_applicable(filing_dt, period))
 
     found_set = set(item_nums)

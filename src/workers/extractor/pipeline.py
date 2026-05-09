@@ -15,10 +15,11 @@ Phase 2 (LLM augmentation) and Phase 3 (XBRL cross-check) come on Day 3.
 
 from __future__ import annotations
 
+import logging
 import re
 import time
-from datetime import date, datetime
 
+from shared.dates import parse_iso_date, to_iso_string
 from workers.extractor.align import align_to_source
 from workers.extractor.classifier import classify_status
 from workers.extractor.cover_page import detect_cover_incorporates
@@ -33,14 +34,7 @@ from workers.extractor.schema import (
 from workers.extractor.segment import segment_with_edgartools
 from workers.extractor.xbrl_check import fetch_company_facts, validate_filing
 
-
-def _to_iso(d: date | datetime | str | None) -> str:
-    if d is None:
-        return ""
-    if isinstance(d, str):
-        return d
-    return d.isoformat() if hasattr(d, "isoformat") else str(d)
-
+log = logging.getLogger(__name__)
 
 _ITEM_SORT_RX = re.compile(r"(\d+)([A-Za-z]?)")
 
@@ -57,16 +51,6 @@ def _item_sort_key(seg: dict) -> tuple[int, int, str]:
     if m:
         return (part, int(m.group(1)), m.group(2).upper())
     return (part, 999, item_num)
-
-
-def _parse_iso_date(s: str | date | datetime | None) -> date:
-    if s is None:
-        return date(1900, 1, 1)
-    if isinstance(s, date):
-        return s
-    if isinstance(s, datetime):
-        return s.date()
-    return date.fromisoformat(str(s)[:10])
 
 
 def extract_10k(
@@ -94,10 +78,10 @@ def extract_10k(
     except Exception as exc:  # noqa: BLE001
         # primary_doc lookup is best-effort; warn rather than crash if
         # edgartools' document accessor changes shape.
-        print(f"[pipeline] warning: primary_doc lookup failed ({type(exc).__name__})")
+        log.warning("primary_doc lookup failed: %s", type(exc).__name__)
 
-    filing_date = _parse_iso_date(filing.filing_date)
-    period_ending = _parse_iso_date(filing.period_of_report)
+    filing_date = parse_iso_date(filing.filing_date)
+    period_ending = parse_iso_date(filing.period_of_report)
 
     # Segment + classify
     seg = segment_with_edgartools(filing)
@@ -174,8 +158,8 @@ def extract_10k(
         cik=str(int(cik)),
         accession=accession,
         form_type=filing.form,
-        filing_date=_to_iso(filing.filing_date),
-        period_ending=_to_iso(filing.period_of_report),
+        filing_date=to_iso_string(filing.filing_date),
+        period_ending=to_iso_string(filing.period_of_report),
         primary_document=primary_doc or "",
         is_inline_xbrl=is_xbrl,
         is_abs_filing=is_abs,

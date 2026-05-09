@@ -27,6 +27,7 @@ from pathlib import Path
 
 import httpx
 
+from shared.sec_identity import get_user_agent
 from workers.extractor.schema import (
     ExtractionResult,
     NumericReconciliation,
@@ -34,11 +35,6 @@ from workers.extractor.schema import (
 )
 
 log = logging.getLogger(__name__)
-
-_USER_AGENT = os.environ.get(
-    "SEC_USER_AGENT",
-    "Kevin Wei interview-hw-2026 weisl@nlg.csie.ntu.edu.tw",
-)
 
 # Cache XBRL JSONs to disk; these can be 5-50MB and rarely change for old
 # filings. Refetch if older than 24h.
@@ -71,6 +67,44 @@ def _is_fresh(path: Path) -> bool:
     return path.exists() and (time.time() - path.stat().st_mtime) < _CACHE_TTL_SECONDS
 
 
+_RETRY_STATUS = {429, 502, 503, 504}
+
+
+def _get_with_retry(
+    url: str,
+    *,
+    headers: dict[str, str],
+    timeout: float,
+    max_attempts: int = 3,
+) -> httpx.Response | None:
+    """Sync GET with exponential backoff on transient failures.
+
+    SEC EDGAR returns 503 / 429 occasionally; without retry these become
+    silent "no XBRL data" results that bias the eval. Returns None only
+    after all attempts exhausted (or non-transient HTTPError).
+    """
+    delay = 1.0
+    for attempt in range(max_attempts):
+        try:
+            r = httpx.get(url, headers=headers, timeout=timeout)
+        except httpx.HTTPError as exc:
+            if attempt == max_attempts - 1:
+                log.warning("xbrl fetch failed (transport): %s", exc)
+                return None
+            log.info("xbrl fetch transport error (attempt %d/%d): %s",
+                     attempt + 1, max_attempts, exc)
+        else:
+            if r.status_code not in _RETRY_STATUS:
+                return r
+            if attempt == max_attempts - 1:
+                return r
+            log.info("xbrl fetch HTTP %s (attempt %d/%d), retrying",
+                     r.status_code, attempt + 1, max_attempts)
+        time.sleep(delay)
+        delay *= 2
+    return None
+
+
 def fetch_company_facts(cik: int | str, *, timeout: float = 30.0) -> dict | None:
     """Fetch SEC XBRL Company Facts for a CIK. Returns None on 404 (no XBRL).
 
@@ -86,16 +120,10 @@ def fetch_company_facts(cik: int | str, *, timeout: float = 30.0) -> dict | None
             log.warning("xbrl cache unreadable, refetching: %s", exc)
 
     url = _company_facts_url(cik)
-    try:
-        r = httpx.get(
-            url,
-            headers={"User-Agent": _USER_AGENT, "Accept": "application/json"},
-            timeout=timeout,
-        )
-    except httpx.HTTPError as exc:
-        log.warning("xbrl fetch failed for CIK %s: %s", cik, exc)
+    headers = {"User-Agent": get_user_agent(), "Accept": "application/json"}
+    r = _get_with_retry(url, headers=headers, timeout=timeout)
+    if r is None:
         return None
-
     if r.status_code == 404:
         return None
     if r.status_code != 200:
@@ -132,7 +160,6 @@ def facts_for_accession(cf: dict, accession: str) -> dict[str, list[dict]]:
     for concept, unit, fact in _iter_us_gaap_facts(cf):
         if fact.get("accn") != accession:
             continue
-        # carry unit forward; the bare fact dict doesn't include it
         out.setdefault(concept, []).append({**fact, "unit": unit})
     return out
 

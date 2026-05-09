@@ -32,12 +32,11 @@ from pydantic import BaseModel, Field
 
 from api.cache import get_result, known_slug, list_filings
 from api.rate_limit import RateLimiter
+from shared.sec_identity import get_user_agent, set_edgar_identity
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 UI_DIR = REPO_ROOT / "ui"
 
-# SEC requires a User-Agent or returns 429. We refuse to start without one
-# rather than silently using a generic-bot signature.
 SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT", "").strip()
 
 EXTRACT_RPM = int(os.environ.get("EXTRACT_RPM", "6"))
@@ -63,20 +62,9 @@ _extract_pool = ThreadPoolExecutor(max_workers=EXTRACT_WORKERS, thread_name_pref
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     if not SEC_USER_AGENT and os.environ.get("ALLOW_MISSING_SEC_UA") != "1":
-        raise RuntimeError(
-            "SEC_USER_AGENT environment variable is required. "
-            "SEC EDGAR mandates a User-Agent identifying the requester. "
-            "Set e.g. SEC_USER_AGENT='Your Name your@email'."
-        )
-    # Late import: tests that don't touch extraction can still import this module.
+        get_user_agent(strict=True)  # raises with the canonical message
     if SEC_USER_AGENT:
-        try:
-            from edgar import set_identity
-
-            set_identity(SEC_USER_AGENT)
-        except Exception:  # noqa: BLE001
-            pass
-    # Warm the manifest so /health probes never touch disk.
+        set_edgar_identity()
     list_filings()
     yield
     # No pool shutdown: shutting down across test lifespans was breaking the
