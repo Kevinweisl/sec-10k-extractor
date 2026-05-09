@@ -10,6 +10,7 @@ const API = {
 const els = {
   goldRow: document.querySelector('#demo-gold .demo-buttons'),
   silverRow: document.querySelector('#demo-silver .demo-buttons'),
+  liveSamples: document.querySelector('#live-samples'),
   form: document.querySelector('#extract-form'),
   cik: document.querySelector('#cik'),
   accession: document.querySelector('#accession'),
@@ -21,6 +22,18 @@ const els = {
   footerMeta: document.querySelector('#footer-meta'),
 };
 
+// Pre-validated mid-cap 10-Ks not in the demo cache; clicking a chip fills
+// the form so reviewers don't need to look up an accession on EDGAR. All
+// were the most recent 10-K on EDGAR as of this commit; refresh by running
+// `python -c "from edgar import Company, set_identity; set_identity('...');
+// print(Company(909832).get_filings(form=['10-K']).head(1)[0].accession_no)"`.
+const LIVE_SAMPLES = [
+  { label: 'Costco',    cik: '909832',  accession: '0000909832-25-000101', period: 'FY25 (Aug 2025)' },
+  { label: 'Starbucks', cik: '829224',  accession: '0000829224-25-000114', period: 'FY25 (Sep 2025)' },
+  { label: 'Nike',      cik: '320187',  accession: '0000320187-25-000047', period: 'FY25 (May 2025)' },
+  { label: "Domino's",  cik: '1286681', accession: '0001193125-26-062321', period: 'FY25 (Dec 2025)' },
+];
+
 // Items from the most recently rendered result, looked up by toggleItemDetail.
 let currentItems = [];
 
@@ -30,8 +43,34 @@ let currentItems = [];
   } catch (err) {
     showMessage(`Failed to load demo filings: ${err.message}`, 'error');
   }
+  renderLiveSamples();
   els.form.addEventListener('submit', onLiveExtract);
 })();
+
+function renderLiveSamples() {
+  if (!els.liveSamples) return;
+  const chips = LIVE_SAMPLES.map((s) => `
+    <button type="button" class="sample-chip"
+            data-cik="${escapeHtml(s.cik)}"
+            data-accession="${escapeHtml(s.accession)}">
+      <span class="chip-label">${escapeHtml(s.label)}</span>
+      <span class="chip-period">${escapeHtml(s.period)}</span>
+    </button>
+  `).join('');
+  els.liveSamples.innerHTML = `
+    <span class="samples-label">Try a fresh filing:</span>
+    <div class="samples-row">${chips}</div>
+  `;
+  els.liveSamples.querySelectorAll('.sample-chip').forEach((chip) => {
+    chip.addEventListener('click', () => fillFromSample(chip));
+  });
+}
+
+function fillFromSample(chip) {
+  els.cik.value = chip.dataset.cik;
+  els.accession.value = chip.dataset.accession;
+  els.runBtn.focus();
+}
 
 async function loadDemoButtons() {
   const resp = await fetch(API.filings);
@@ -157,7 +196,7 @@ function startProgress({ cik, accession }) {
     const elapsedEl = document.getElementById('progress-elapsed');
     if (elapsedEl) elapsedEl.textContent = `${(elapsed / 1000).toFixed(1)} s`;
     const fill = document.getElementById('progress-bar-fill');
-    if (fill) fill.style.width = `${Math.min(100, (elapsed / 30000) * 100)}%`;
+    if (fill) fill.style.width = `${Math.min(100, (elapsed / 50000) * 100)}%`;
 
     while (
       currentIndex < PROGRESS_STAGES.length - 1 &&

@@ -123,6 +123,47 @@ button.demo .characteristic {
   line-height: 1.4;
 }
 
+/* Live-extract sample chips (click to fill the form) */
+#live-samples {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+#live-samples .samples-label {
+  font-size: 0.78rem;
+  color: #57606a;
+  font-weight: 500;
+}
+#live-samples .samples-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+button.sample-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 5px 10px;
+  background: white;
+  border: 1px solid #d0d7de;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.78rem;
+  color: #0969da;
+  transition: background 0.1s, border-color 0.1s;
+}
+button.sample-chip:hover { background: #ddf4ff; border-color: #0969da; }
+button.sample-chip:focus { outline: 2px solid #0969da; outline-offset: 1px; }
+button.sample-chip .chip-label { font-weight: 600; }
+button.sample-chip .chip-period {
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  color: #6e7781;
+}
+
 /* Live extract form */
 #extract-form {
   display: flex;
