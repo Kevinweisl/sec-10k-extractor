@@ -13,7 +13,7 @@ get_result(slug) returns None.
 from __future__ import annotations
 
 import json
-from functools import cache
+from functools import lru_cache
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -25,9 +25,7 @@ SILVER_FILINGS_PATH = REPO_ROOT / "evals" / "sec-extraction" / "silver" / "silve
 
 GOLD_SLUGS = ["apple-2024", "ge-2021", "chemical-banking-1995"]
 
-# Map slug → human-readable label. Keep in sync with the gold + silver source
-# files; extra slugs fall back to the slug itself.
-_PRETTY_LABELS = {
+PRETTY_LABELS = {
     "apple-2024": "Apple Inc. (FY2024)",
     "ge-2021": "General Electric (FY2021)",
     "chemical-banking-1995": "Chemical Banking (FY1995)",
@@ -40,7 +38,7 @@ _PRETTY_LABELS = {
     "intel-2020": "Intel (FY2019)",
 }
 
-_GOLD_NOTES = {
+GOLD_NOTES = {
     "apple-2024": "Modern iXBRL filing. Phase 1 hits 100% status accuracy on hand-validated gold spec.",
     "ge-2021": "Modern HTML; cross-reference TOC forces fallback to regex segmenter.",
     "chemical-banking-1995": "Pre-iXBRL SGML 10-K405; pure-text era, tests the SGML support path.",
@@ -57,12 +55,12 @@ def load_gold_metadata() -> list[dict]:
         filing = data.get("filing", {})
         out.append({
             "slug": slug,
-            "label": _PRETTY_LABELS.get(slug, slug),
+            "label": PRETTY_LABELS.get(slug, slug),
             "cik": filing.get("cik", ""),
             "accession": filing.get("accession", ""),
             "form_type": filing.get("form_type", "10-K"),
             "period_ending": filing.get("period_ending", ""),
-            "characteristic": _GOLD_NOTES.get(slug, data.get("_comment", "")),
+            "characteristic": GOLD_NOTES.get(slug, data.get("_comment", "")),
             "source": "gold",
         })
     return out
@@ -75,7 +73,7 @@ def load_silver_metadata() -> list[dict]:
     return [
         {
             "slug": f["key"],
-            "label": _PRETTY_LABELS.get(f["key"], f["key"]),
+            "label": PRETTY_LABELS.get(f["key"], f["key"]),
             "cik": f.get("cik", ""),
             "accession": f.get("accession", ""),
             "form_type": f.get("form_type", "10-K"),
@@ -93,7 +91,7 @@ def load_filings_metadata() -> list[dict]:
     return load_gold_metadata() + load_silver_metadata()
 
 
-@cache
+@lru_cache(maxsize=1)
 def list_filings() -> list[dict]:
     """Return the 10 demo filings' metadata. Cached; restart to pick up edits."""
     if MANIFEST_PATH.exists():
@@ -101,7 +99,10 @@ def list_filings() -> list[dict]:
     return load_filings_metadata()
 
 
-@cache
+# Bounded by the 10-slug whitelist enforced upstream by known_slug; lru_cache
+# makes that bound explicit so a future maintainer expanding the whitelist
+# sees the cap rather than discovering an unbounded leak in production.
+@lru_cache(maxsize=16)
 def get_result(slug: str) -> dict | None:
     """Return the cached extraction result for slug, or None if not built."""
     try:
