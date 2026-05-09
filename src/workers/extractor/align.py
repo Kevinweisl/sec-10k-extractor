@@ -123,10 +123,20 @@ def _header_offset(original: str, body: str) -> int:
 
 
 def _seq_match(source: str, fingerprint: str) -> tuple[int, int] | None:
-    """SequenceMatcher-based fingerprint location.
+    """Locate fingerprint inside source. Returns (matched_length, start_in_source).
 
-    Returns (matched_length, match_start_in_source) or None if confidence too low.
+    Fast path: literal `str.find` (microseconds on MB-sized source). Most
+    Phase-1 segments come straight from edgartools and the fingerprint is
+    a literal substring of the source — no fuzzy match needed.
+
+    Fallback: SequenceMatcher (O(N*M); seconds on MB-sized source) for
+    segments where edgartools normalised whitespace or unicode away from
+    the source representation.
     """
+    idx = source.find(fingerprint)
+    if idx >= 0:
+        return len(fingerprint), idx
+
     sm = SequenceMatcher(a=source, b=fingerprint, autojunk=False)
     match = sm.find_longest_match(0, len(source), 0, len(fingerprint))
     if match.size < int(_MIN_CONFIDENCE_RATIO * len(fingerprint)):

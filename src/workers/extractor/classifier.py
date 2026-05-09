@@ -150,19 +150,20 @@ def classify_status(text: str) -> str:
         if _RE_NOT_APPLICABLE_HEAD.match(tail.strip()):
             return "not_applicable"
 
-    has_incorporated = bool(_RE_INCORPORATED.search(text))
-    has_negative_website = bool(_RE_NEGATIVE_WEBSITE.search(text))
-    if has_incorporated and not _has_only_negative(text, has_incorporated, has_negative_website):
-        # 'remaining' / 'additional' / 'other' information clauses signal there
-        # IS substantive content in this same item — strong partial indicator.
-        # E.g. Apple 2024 Item 10's "The remaining information required by this
-        # Item will be included in the ... Proxy Statement" after a substantive
-        # insider-trading-policy paragraph.
-        if _RE_REMAINING_INFO.search(text):
+    inc_matches = list(_RE_INCORPORATED.finditer(text))
+    if inc_matches:
+        neg_match = _RE_NEGATIVE_WEBSITE.search(text)
+        if not _is_only_negative(inc_matches[0], neg_match):
+            # 'remaining' / 'additional' / 'other' information clauses signal there
+            # IS substantive content in this same item — strong partial indicator.
+            # E.g. Apple 2024 Item 10's "The remaining information required by this
+            # Item will be included in the ... Proxy Statement" after a substantive
+            # insider-trading-policy paragraph.
+            if _RE_REMAINING_INFO.search(text):
+                return "partial"
+            if _is_whole_item_by_reference(text, inc_matches):
+                return "incorporated_by_reference"
             return "partial"
-        if _is_whole_item_by_reference(text):
-            return "incorporated_by_reference"
-        return "partial"
 
     if _RE_LOOSE_SEE.search(text) and len(text) < 600:
         return "incorporated_by_reference"
@@ -170,24 +171,18 @@ def classify_status(text: str) -> str:
     return "extracted"
 
 
-def _has_only_negative(text: str, has_inc: bool, has_neg: bool) -> bool:
-    """Return True when the only by-reference signal is the negative-control phrase
+def _is_only_negative(inc_match: re.Match[str], neg_match: re.Match[str] | None) -> bool:
+    """True when the inc match overlaps the negative-control phrase
     (e.g. 'websites referenced are not incorporated by reference')."""
-    if not has_neg:
+    if neg_match is None:
         return False
-    # If both signals are present, check that the canonical inc match is NOT the negative phrase
-    inc_match = _RE_INCORPORATED.search(text)
-    neg_match = _RE_NEGATIVE_WEBSITE.search(text)
-    if inc_match is None or neg_match is None:
-        return False
-    # If the spans overlap, the inc match is just the negative-control text
     inc_span = inc_match.span()
     neg_span = neg_match.span()
     overlap = max(0, min(inc_span[1], neg_span[1]) - max(inc_span[0], neg_span[0]))
     return overlap > 0
 
 
-def _is_whole_item_by_reference(text: str) -> bool:
+def _is_whole_item_by_reference(text: str, inc_matches: list[re.Match[str]]) -> bool:
     """Heuristic: does the by-reference clause cover the bulk of the item, or is it a
     side-note in an otherwise substantive section?
 
@@ -199,11 +194,9 @@ def _is_whole_item_by_reference(text: str) -> bool:
     (e.g. Apple Item 10's substantive insider-trading paragraph + trailing
     by-ref clause) fall through to `partial`.
     """
-    stripped = text.strip()
-    if len(stripped) < 400:
+    if len(text.strip()) < 400:
         return True
-    matches = list(_RE_INCORPORATED.finditer(text))
-    if not matches:
+    if not inc_matches:
         return False
-    covered = sum(m.end() - m.start() for m in matches)
+    covered = sum(m.end() - m.start() for m in inc_matches)
     return covered / max(len(text), 1) > 0.30

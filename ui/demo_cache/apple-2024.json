@@ -445,11 +445,11 @@
   ],
   "meta": {
     "parser_version": "0.1.0",
-    "extraction_time_ms": 49899,
+    "extraction_time_ms": 30706,
     "cost_usd": 0.0,
     "warnings": [],
-    "cache_built_at": "2026-05-08T15:16:04Z",
-    "cache_build_elapsed_ms": 51331
+    "cache_built_at": "2026-05-09T06:47:23Z",
+    "cache_build_elapsed_ms": 30767
   },
   "xbrl_validation": {
     "has_xbrl_data": true,
