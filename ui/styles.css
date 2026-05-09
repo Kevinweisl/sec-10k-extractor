@@ -184,6 +184,111 @@ button.demo .characteristic {
   border-radius: 6px;
 }
 
+/* Live-extract progress (heuristic stage indicator + elapsed timer) */
+.progress-box {
+  background: white;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 0.85rem;
+}
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.progress-title {
+  color: #24292f;
+  font-weight: 500;
+  font-family: ui-monospace, "SF Mono", Monaco, monospace;
+  font-size: 0.82rem;
+}
+.progress-elapsed {
+  color: #0969da;
+  font-weight: 600;
+  font-family: ui-monospace, monospace;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+.progress-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.progress-stage {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 10px;
+  align-items: baseline;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background: #f6f8fa;
+  color: #8b949e;
+  transition: background 0.15s, color 0.15s;
+}
+.progress-stage.active {
+  background: #ddf4ff;
+  color: #0969da;
+}
+.progress-stage.done {
+  background: #dafbe1;
+  color: #1a7f37;
+}
+.progress-stage .stage-icon {
+  font-family: ui-monospace, monospace;
+  font-weight: 700;
+  text-align: center;
+  font-size: 0.95rem;
+}
+.progress-stage.active .stage-icon {
+  animation: progress-spin 1.2s linear infinite;
+  display: inline-block;
+}
+.progress-stage .stage-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.progress-stage .stage-label {
+  font-weight: 500;
+  font-size: 0.84rem;
+}
+.progress-stage .stage-detail {
+  font-family: ui-monospace, monospace;
+  font-size: 0.72rem;
+  color: #6e7781;
+}
+.progress-stage.active .stage-detail { color: #0969da; opacity: 0.85; }
+.progress-stage.done .stage-detail { color: #1a7f37; opacity: 0.85; }
+
+.progress-bar {
+  height: 4px;
+  background: #eaeef2;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0969da, #54aeff);
+  width: 0%;
+  transition: width 0.1s linear;
+}
+.progress-foot {
+  font-size: 0.72rem;
+  color: #6e7781;
+  font-family: ui-monospace, monospace;
+}
+
+@keyframes progress-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 #filing-meta {
   background: white;
   padding: 12px 16px;

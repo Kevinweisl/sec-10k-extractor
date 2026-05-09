@@ -83,7 +83,7 @@ async function onLiveExtract(ev) {
   const accession = els.accession.value.trim();
 
   els.runBtn.disabled = true;
-  showMessage(`Live extracting CIK ${cik} accession ${accession}… (3-30 sec)`);
+  const progress = startProgress({ cik, accession });
   const t0 = performance.now();
   try {
     const resp = await fetch(API.extract, {
@@ -92,18 +92,111 @@ async function onLiveExtract(ev) {
       body: JSON.stringify({ cik, accession }),
     });
     if (!resp.ok) {
+      stopProgress(progress, { ok: false });
       const detail = await resp.json().catch(() => ({}));
       showMessage(detail.detail || `HTTP ${resp.status}`, 'error');
       return;
     }
     const data = await resp.json();
+    stopProgress(progress, { ok: true });
     const ms = Math.round(performance.now() - t0);
     renderResult(data, { source: 'live', label: `CIK ${cik}`, clientMs: ms });
   } catch (err) {
+    stopProgress(progress, { ok: false });
     showMessage(err.message, 'error');
   } finally {
     els.runBtn.disabled = false;
   }
+}
+
+// Pipeline stages mirror src/workers/extractor/pipeline.py:extract_10k.
+// Advancement is heuristic (the backend doesn't stream progress); the timings
+// are typical mid-cap 10-K observations rather than promises.
+const PROGRESS_STAGES = [
+  { key: 'fetch',    label: 'Fetching 10-K from SEC EDGAR',           detail: 'edgartools.Filing lookup',                       advanceAtMs:  6000 },
+  { key: 'parse',    label: 'Parsing HTML and segmenting items',       detail: 'edgartools sections; regex fallback if sparse',  advanceAtMs: 11000 },
+  { key: 'classify', label: 'Classifying status and aligning char ranges', detail: '6-status rules + difflib fingerprint match', advanceAtMs: 15000 },
+  { key: 'xbrl',     label: 'Cross-checking against XBRL Company Facts', detail: 'data.sec.gov fetch + 4-signal validation',     advanceAtMs: null  },
+];
+
+function startProgress({ cik, accession }) {
+  els.result.hidden = false;
+  els.status.className = '';
+  els.filingMeta.innerHTML = '';
+  els.itemsList.innerHTML = '';
+  els.footerMeta.innerHTML = '';
+
+  const stagesHtml = PROGRESS_STAGES.map((s, i) => `
+    <div class="progress-stage" data-stage="${s.key}" data-index="${i}">
+      <span class="stage-icon">○</span>
+      <span class="stage-text">
+        <span class="stage-label">${escapeHtml(s.label)}</span>
+        <span class="stage-detail">${escapeHtml(s.detail)}</span>
+      </span>
+    </div>
+  `).join('');
+
+  els.status.innerHTML = `
+    <div class="progress-box">
+      <div class="progress-header">
+        <span class="progress-title">Live extracting CIK ${escapeHtml(cik)} · ${escapeHtml(accession)}</span>
+        <span class="progress-elapsed" id="progress-elapsed">0.0 s</span>
+      </div>
+      <div class="progress-stages">${stagesHtml}</div>
+      <div class="progress-bar"><div class="progress-bar-fill" id="progress-bar-fill"></div></div>
+      <div class="progress-foot">No backend streaming; stage advancement is heuristic. Backend timeout is 60 s.</div>
+    </div>
+  `;
+
+  const t0 = performance.now();
+  let currentIndex = 0;
+  markStageActive(0);
+
+  const timerId = setInterval(() => {
+    const elapsed = performance.now() - t0;
+    const elapsedEl = document.getElementById('progress-elapsed');
+    if (elapsedEl) elapsedEl.textContent = `${(elapsed / 1000).toFixed(1)} s`;
+    const fill = document.getElementById('progress-bar-fill');
+    if (fill) fill.style.width = `${Math.min(100, (elapsed / 30000) * 100)}%`;
+
+    while (
+      currentIndex < PROGRESS_STAGES.length - 1 &&
+      PROGRESS_STAGES[currentIndex].advanceAtMs != null &&
+      elapsed >= PROGRESS_STAGES[currentIndex].advanceAtMs
+    ) {
+      markStageDone(currentIndex);
+      currentIndex += 1;
+      markStageActive(currentIndex);
+    }
+  }, 100);
+
+  return { timerId, t0 };
+}
+
+function stopProgress(progress, { ok }) {
+  if (!progress) return;
+  clearInterval(progress.timerId);
+  if (!ok) return;
+  // Mark every stage done so the user sees a clean checkmark column before
+  // renderResult clears the progress box.
+  PROGRESS_STAGES.forEach((_, i) => markStageDone(i));
+}
+
+function markStageActive(index) {
+  const node = document.querySelector(`.progress-stage[data-index="${index}"]`);
+  if (!node) return;
+  node.classList.add('active');
+  const icon = node.querySelector('.stage-icon');
+  if (icon) icon.textContent = '◐';
+}
+
+function markStageDone(index) {
+  const node = document.querySelector(`.progress-stage[data-index="${index}"]`);
+  if (!node) return;
+  node.classList.remove('active');
+  node.classList.add('done');
+  const icon = node.querySelector('.stage-icon');
+  if (icon) icon.textContent = '✓';
 }
 
 function renderResult(data, { source, label, clientMs }) {
