@@ -291,6 +291,12 @@ def cross_reference_toc_segment(raw_text: str) -> list[dict[str, Any]] | None:
         # Split "Title  PageRef"; typically separated by 2+ spaces
         title, page_ref = _split_toc_line(line)
         status_hint = _classify_toc_page_ref(page_ref)
+        # If the title itself reads as "[Reserved]" (Intel-style cross-ref TOC
+        # where the page_ref is empty / no footnote), surface the reserved
+        # status here so the downstream classifier does not need a special
+        # case for the synthetic TOC content_text.
+        if "[reserved]" in title.lower():
+            status_hint = "reserved"
         items.append({
             "part": part_for_item(item_num),
             "item_number": item_num,
@@ -318,14 +324,24 @@ def _split_toc_line(line: str) -> tuple[str, str]:
 
 
 def _classify_toc_page_ref(page_ref: str) -> str:
-    """Map a TOC page reference to a status hint."""
+    """Map a TOC page reference to a status hint.
+
+    Intel 2026 uses `(a)` style footnotes; this matcher was already correct
+    for those. But other filings use numeric `(1)` or symbol `(*)` / `(†)`
+    footnotes, all of which carry the same by-reference semantics. We widen
+    the pattern + also accept the `[Reserved]` literal as its own status hint
+    so the synthetic `[Reserved]` content_text downstream is classified
+    correctly (was reaching the classifier as just plain text).
+    """
     if not page_ref:
         return "extracted"
     s = page_ref.strip().lower()
     if "not applicable" in s or s == "none" or s == "n/a":
         return "not_applicable"
-    # "(a)", "(b)", "(c)"; footnote letters typically refer to proxy by-ref
-    if re.fullmatch(r"\([a-z]\)(?:[, ]+\d+)*", s):
+    if "[reserved]" in s or s.strip("[]() ").strip() == "reserved":
+        return "reserved"
+    # Widened footnote pattern: (a)-(z), (1)+, or single symbol footnote.
+    if re.fullmatch(r"\((?:[a-z]|\d+|[*†‡§])\)(?:[, ]+\d+)*", s):
         return "incorporated_by_reference"
     # any digits → page reference, body content exists
     if re.search(r"\d", s):
