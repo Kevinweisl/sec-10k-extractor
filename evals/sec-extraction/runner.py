@@ -34,6 +34,7 @@ try:
 except ImportError:
     pass
 
+from workers.extractor.page_anchored import is_toc_stub  # noqa: E402
 from workers.extractor.pipeline import extract_10k  # noqa: E402
 
 
@@ -93,6 +94,23 @@ def score_filing(actual, gold: dict) -> dict:
     text_align_rate = text_aligned / len(actual_items) if actual_items else 0.0
     html_align_rate = html_aligned / len(actual_items) if actual_items else 0.0
 
+    # ---- Content-sanity metrics (Tier-1 fix) -----------------------------
+    # GE 2021 was scoring 100% precision while content_text was all TOC
+    # stubs. These metrics surface that blind spot.
+    toc_stubs = sum(1 for it in actual_items if is_toc_stub(it.content_text))
+    toc_stub_rate = round(toc_stubs / len(actual_items), 4) if actual_items else 0.0
+    mean_content_len = (
+        round(sum(len(it.content_text or "") for it in actual_items) / len(actual_items), 0)
+        if actual_items else 0.0
+    )
+    goodhart_alert: str | None = None
+    if status_accuracy > 0.9 and toc_stub_rate > 0.3:
+        goodhart_alert = (
+            f"status_accuracy={status_accuracy:.3f} looks healthy "
+            f"BUT toc_stub_rate={toc_stub_rate:.0%} -- body content likely missing. "
+            f"Investigate before trusting this score (Goodhart's Law)."
+        )
+
     # XBRL validation summary
     xbrl = actual.xbrl_validation
     xbrl_summary: dict = {"validated": xbrl is not None}
@@ -118,6 +136,11 @@ def score_filing(actual, gold: dict) -> dict:
         "full_match_rate": round(full_match_rate, 4),
         "text_alignment_rate": round(text_align_rate, 4),
         "html_alignment_rate": round(html_align_rate, 4),
+        "toc_stub_rate": toc_stub_rate,
+        "mean_content_length": mean_content_len,
+        "goodhart_alert": goodhart_alert,
+        "filing_status": actual.meta.filing_status,
+        "fallback_used": actual.meta.fallback_used,
         "extraction_time_ms": actual.meta.extraction_time_ms,
         "xbrl": xbrl_summary,
         "fp_items": sorted(actual_items_set - expected_items_set),
@@ -181,8 +204,18 @@ def run_eval(gold_dir: Path, *, with_xbrl: bool = True, with_llm: bool = False) 
         "mean_full_match_rate": round(sum(r["full_match_rate"] for r in results) / n, 4),
         "mean_text_alignment": round(sum(r["text_alignment_rate"] for r in results) / n, 4),
         "mean_extraction_ms": int(sum(r["extraction_time_ms"] for r in results) / n),
+        "mean_toc_stub_rate": round(sum(r.get("toc_stub_rate", 0) for r in results) / n, 4),
+        "mean_content_length": int(sum(r.get("mean_content_length", 0) for r in results) / n),
+        "goodhart_alerts": sum(1 for r in results if r.get("goodhart_alert")),
         "errors": sum(1 for r in results if r.get("error")),
     }
+    summary["pass"] = (
+        summary["mean_status_accuracy"] >= 0.95
+        and summary["mean_text_alignment"] >= 0.70
+        and summary["mean_toc_stub_rate"] <= 0.10
+        and summary["goodhart_alerts"] == 0
+        and summary["errors"] == 0
+    )
     return {"results": results, "summary": summary}
 
 
