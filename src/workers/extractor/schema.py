@@ -72,6 +72,26 @@ class ExtractionMeta(BaseModel):
     extraction_time_ms: int = 0
     cost_usd: float = 0.0
     warnings: list[str] = Field(default_factory=list)
+    # Filing-level health flag so consumers do not silently trust
+    # 200-OK responses with zero items (Citi 2026 regression).
+    # "extracted"          — normal end-to-end success
+    # "partial"            — got items but with content-sanity warnings
+    # "extraction_failed"  — sanity check failed (zero items, etc.)
+    # "abs_placeholder"    — Reg-AB filing, schema does not apply
+    filing_status: Literal[
+        "extracted",
+        "partial",
+        "extraction_failed",
+        "abs_placeholder",
+    ] = "extracted"
+    # toc_stub_rate exposes how many items are TOC stubs (content_text is
+    # just the index line, not the real body). High value means a
+    # cross-reference filing came back but no page-anchored / title-headings
+    # fallback could fill the bodies.
+    toc_stub_rate: float = 0.0
+    # fallback_used names the alternate extraction path that ran when the
+    # main path returned suspect output. None means the main path succeeded.
+    fallback_used: str | None = None
 
 
 class NumericReconciliation(BaseModel):
