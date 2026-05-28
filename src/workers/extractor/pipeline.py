@@ -25,6 +25,12 @@ from workers.extractor.classifier import classify_status
 from workers.extractor.cover_page import detect_cover_incorporates
 from workers.extractor.era import items_applicable
 from workers.extractor.fetch import find_10k_filing
+from workers.extractor.page_anchored import (
+    extract_by_page_anchors,
+    extract_by_title_headings,
+    is_toc_stub,
+    toc_stub_rate,
+)
 from workers.extractor.schema import (
     ExtractionMeta,
     ExtractionResult,
@@ -37,6 +43,12 @@ from workers.extractor.xbrl_check import fetch_company_facts, validate_filing
 log = logging.getLogger(__name__)
 
 _ITEM_SORT_RX = re.compile(r"(\d+)([A-Za-z]?)")
+
+# Sanity-check thresholds. A canonical 10-K should yield at least 8 items
+# (Items 1, 1A, 2, 3, 4, 5, 7, 8 at minimum); modern filings yield 16-23.
+MIN_EXPECTED_ITEMS_FOR_HEALTHY = 8
+TOC_STUB_FALLBACK_THRESHOLD = 0.5
+PAGE_ANCHORED_MIN_IMPROVEMENT = 3.0  # fallback avg content must be 3x better to swap
 
 
 def _item_sort_key(seg: dict) -> tuple[int, int, str]:
@@ -91,6 +103,48 @@ def extract_10k(
 
     cover_ref = detect_cover_incorporates(raw_text)
 
+    # ---- Tier-0 fix: TOC stub fallback ------------------------------------
+    # Pre-pivot bug: cross_reference_toc_segment returned items where
+    # content_text was just "[Cross-reference TOC] Title (Pages N)". Two
+    # recovery strategies tried in order:
+    #   1. page_anchored  -- old SEC <a name="item_*"> anchors. Legacy filings.
+    #   2. title_headings -- standardized SEC titles like "Risk Factors",
+    #      "Properties". Modern iXBRL (Intel 2022+, etc.).
+    # We swap items only when the alternate path materially improves
+    # average content length (3x baseline).
+    seg_items = seg["items"]
+    pre_stub_rate = toc_stub_rate(seg_items)
+    fallback_used: str | None = None
+
+    def _try_fallback(
+        candidate: list[dict] | None, label: str,
+    ) -> bool:
+        nonlocal seg_items, fallback_used
+        if not candidate:
+            return False
+        seg_avg = _avg_content_len(seg_items)
+        cand_avg = _avg_content_len(candidate)
+        if cand_avg > max(seg_avg, 1) * PAGE_ANCHORED_MIN_IMPROVEMENT:
+            seg_items = candidate
+            fallback_used = label
+            return True
+        return False
+
+    if not is_abs and pre_stub_rate > TOC_STUB_FALLBACK_THRESHOLD:
+        # Strategy 1 - page anchors (legacy).
+        if raw_html and not _try_fallback(
+            extract_by_page_anchors(raw_html, seg_items),
+            "page_anchored_after_toc_detected",
+        ):
+            # Strategy 2 - title headings (modern iXBRL).
+            if raw_text:
+                _try_fallback(
+                    extract_by_title_headings(raw_text, seg_items),
+                    "title_headings_after_toc_detected",
+                )
+    # Only recompute when a fallback actually swapped the items list.
+    post_stub_rate = toc_stub_rate(seg_items) if fallback_used else pre_stub_rate
+
     # What items are applicable in this filing's era?
     applicable = set(items_applicable(filing_date, period_ending))
 
@@ -108,7 +162,7 @@ def extract_10k(
         # Sort by (part, item_number) and thread a forward-only cursor so that
         # by-ref boilerplate collisions (Items 11-14 share near-identical text)
         # don't all resolve to the same offset.
-        sorted_segs = sorted(seg["items"], key=_item_sort_key)
+        sorted_segs = sorted(seg_items, key=_item_sort_key)
         text_cursor = 0
         html_cursor = 0
         for raw in sorted_segs:
@@ -170,12 +224,22 @@ def extract_10k(
     if enable_llm_aug and not is_abs:
         items, aug_warnings = _run_llm_augmentation(items)
 
+    # ---- Tier-0 fix: filing-level sanity check ---------------------------
+    # Before this fix, Citi 2026 returned 200 OK + items=[] + warnings=[]
+    # (silent failure). Now any sub-canonical output sets explicit health
+    # flags so API consumers can branch on filing_status, not just HTTP 200.
+    filing_status = _compute_filing_status(items, is_abs, post_stub_rate)
+    sanity_warnings = _build_sanity_warnings(items, is_abs, post_stub_rate)
+
     result = ExtractionResult(
         filing=meta_filing,
         items=items,
         meta=ExtractionMeta(
             extraction_time_ms=elapsed_ms,
-            warnings=aug_warnings,
+            warnings=aug_warnings + sanity_warnings,
+            filing_status=filing_status,
+            toc_stub_rate=post_stub_rate,
+            fallback_used=fallback_used,
         ),
     )
 
@@ -185,6 +249,54 @@ def extract_10k(
         result.xbrl_validation = validate_filing(result, cf)
 
     return result
+
+
+def _avg_content_len(items: list) -> float:
+    """Average content_text length across items (0 if empty)."""
+    if not items:
+        return 0.0
+    total = 0
+    for it in items:
+        ct = it.get("content_text") if isinstance(it, dict) else getattr(it, "content_text", "")
+        total += len(ct or "")
+    return total / len(items)
+
+
+def _compute_filing_status(items: list[Item], is_abs: bool, stub_rate: float) -> str:
+    """Return one of: extracted | partial | extraction_failed | abs_placeholder."""
+    if is_abs:
+        return "abs_placeholder"
+    if len(items) == 0:
+        return "extraction_failed"
+    if len(items) < MIN_EXPECTED_ITEMS_FOR_HEALTHY or stub_rate > 0.3:
+        return "partial"
+    return "extracted"
+
+
+def _build_sanity_warnings(items: list[Item], is_abs: bool, stub_rate: float) -> list[str]:
+    """Emit explicit warnings for sub-canonical output (was silent before)."""
+    warnings: list[str] = []
+    if is_abs:
+        return warnings
+    if len(items) == 0:
+        warnings.append(
+            "zero_items_extracted [HARD_FAILURE]: edgartools + regex + page-anchored "
+            "all returned no items. Filing format is outside current coverage. "
+            "Verify accession; if format is novel, add to eval set + new segmenter path."
+        )
+        return warnings
+    if len(items) < MIN_EXPECTED_ITEMS_FOR_HEALTHY:
+        warnings.append(
+            f"low_item_count [WARNING]: got {len(items)} items, expected >= "
+            f"{MIN_EXPECTED_ITEMS_FOR_HEALTHY}. Partial extraction likely."
+        )
+    if stub_rate > 0.3:
+        warnings.append(
+            f"high_toc_stub_rate [WARNING]: {stub_rate:.0%} of items are TOC "
+            "stubs (content_text is just the index line, not the body). "
+            "Page-anchored fallback did not improve content."
+        )
+    return warnings
 
 
 def _run_llm_augmentation(items: list[Item]) -> tuple[list[Item], list[str]]:
